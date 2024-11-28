@@ -1,166 +1,127 @@
-import zmq
+import grpc
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm
+from protos import device_service_pb2 as pb2
+from protos import device_service_pb2_grpc as pb2_grpc
 
 class DistributedNeuralNetwork:
     def __init__(self, layer_sizes, quantization_bits=8):
         self.layer_sizes = layer_sizes
-        self.max_devices = len(layer_sizes) - 1  # Maximum number of devices = number of layers
+        self.max_devices = len(layer_sizes) - 1
         self.device_connections = {}
         self.quantization_bits = quantization_bits
-        self.context = zmq.Context()
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         print(f"Using device: {self.device}")
         print(f"Maximum number of devices: {self.max_devices}")
-        
-    def quantize(self, x):
-        """Quantize data before sending"""
-        if isinstance(x, torch.Tensor):
-            x = x.detach().cpu().numpy()
-            
-        max_val = np.max(np.abs(x))
-        if max_val == 0:
-            return x
-        
-        scale = (2 ** (self.quantization_bits - 1) - 1) / max_val
-        quantized = np.round(x * scale)
-        return quantized / scale
-
+    
     def connect_to_device(self, ip, port):
-        """Connect to a device on the specified IP and port"""
+        """Connect to a device using gRPC"""
         if len(self.device_connections) >= self.max_devices:
-            print(f"Maximum number of devices ({self.max_devices}) reached. Skipping connection to {ip}:{port}")
+            print(f"Maximum number of devices ({self.max_devices}) reached")
             return False
-            
+        
         try:
-            socket = self.context.socket(zmq.REQ)
-            socket.connect(f"tcp://{ip}:{port}")
-            device_id = len(self.device_connections) + 1
-
-            socket.send_pyobj({'command': "ping"})
+            channel = grpc.insecure_channel(f'{ip}:{port}')
+            stub = pb2_grpc.DeviceServiceStub(channel)
             
-            # Wait for the server response
-            response = socket.recv_pyobj()
-            print("Response from server:", response)
-
-            self.device_connections[device_id] = socket
-            print(f"Connected to device {device_id} at port {port} ({len(self.device_connections)}/{self.max_devices} devices)")
+            # Test connection
+            response = stub.Ping(pb2.PingRequest())
+            if response.status != 'connection successful':
+                return False
+            
+            device_id = len(self.device_connections) + 1
+            self.device_connections[device_id] = stub
+            print(f"Connected to device {device_id} at {ip}:{port}")
             return True
             
-        except zmq.error.Again as e:
-            print(f"Timeout error: {e}")
-            return False
         except Exception as e:
-            print(f"Other error: {e}")
+            print(f"Connection error: {e}")
             return False
-
+    
     def initialize_devices(self):
         """Initialize devices with balanced layer distribution"""
         num_devices = len(self.device_connections)
         num_layers = len(self.layer_sizes) - 1
         
-        # Calculate base layers per device and extras
         layers_per_device = num_layers // num_devices
         extra_layers = num_layers % num_devices
         
         print(f"\nDistributing {num_layers} layers across {num_devices} devices")
-        print(f"Base layers per device: {layers_per_device}")
-        print(f"Extra layers to distribute: {extra_layers}")
         
         current_layer = 0
-        device_layer_map = {}  # Keep track of which layers are on which device
+        device_layer_map = {}
         
-        for device_id, socket in self.device_connections.items():
-            # Calculate number of layers for this device
+        for device_id, stub in self.device_connections.items():
             n_layers = layers_per_device + (1 if device_id <= extra_layers else 0)
-            
-            # Create layer configurations for this device
             layer_configs = []
-            layer_indices = []  # Store indices of layers on this device
+            layer_indices = []
             
             for _ in range(n_layers):
                 if current_layer < len(self.layer_sizes) - 1:
-                    layer_configs.append({
-                        'input_size': self.layer_sizes[current_layer],
-                        'output_size': self.layer_sizes[current_layer + 1],
-                        'activation': 'relu' if current_layer < len(self.layer_sizes) - 2 else 'softmax'
-                    })
+                    config = pb2.LayerConfig(
+                        input_size=self.layer_sizes[current_layer],
+                        output_size=self.layer_sizes[current_layer + 1],
+                        activation='relu' if current_layer < len(self.layer_sizes) - 2 else 'softmax'
+                    )
+                    layer_configs.append(config)
                     layer_indices.append(current_layer)
                     current_layer += 1
             
-            # Store layer mapping
             device_layer_map[device_id] = layer_indices
             
-            # Initialize device with its layer configurations
-            socket.send_pyobj({
-                'command': 'init',
-                'layer_configs': layer_configs,
-                'device_id': device_id
-            })
-            response = socket.recv_pyobj()
-            print(f"Initialized device {device_id} with layers {layer_indices}: {response}")
+            response = stub.Initialize(pb2.InitRequest(
+                layer_configs=layer_configs,
+                device_id=device_id
+            ))
+            print(f"Initialized device {device_id} with layers {layer_indices}")
         
         self.device_layer_map = device_layer_map
         print("\nLayer distribution complete")
-
+    
     def forward(self, X):
-        """Distributed forward pass with quantized data"""
+        """Distributed forward pass"""
         if isinstance(X, torch.Tensor):
             X = X.detach().cpu().numpy()
         
-        # Ensure input is 2D
-        if len(X.shape) == 1:
-            X = X.reshape(1, -1)
-        elif len(X.shape) == 3:
-            X = X.reshape(X.shape[0], -1)
-        elif len(X.shape) == 4:
-            X = X.reshape(X.shape[0], -1)
-        
-        A = self.quantize(X)
+        A = X
         activations = [X]
-        # Forward through each device in order
+        
         for device_id in sorted(self.device_connections.keys()):
-            socket = self.device_connections[device_id]
-            socket.send_pyobj({
-                'command': 'forward',
-                'input': A
-            })
-            response = socket.recv_pyobj()
-
-            A = response['output']
-            activations.append(A)
+            stub = self.device_connections[device_id]
+            response = stub.Forward(pb2.ForwardRequest(
+                input=A.flatten().tolist(),
+                input_shape=list(A.shape)
+            ))
             
+            A = np.array(response.output).reshape(response.output_shape)
+            activations.append(A)
+        
         return activations
-
+    
     def backward(self, activations, y_true):
-        """Distributed backward pass with quantized gradients"""
+        """Distributed backward pass"""
         m = y_true.shape[0]
         y_onehot = np.zeros_like(activations[-1])
         y_onehot[np.arange(m), y_true] = 1
-        dA = self.quantize(activations[-1] - y_onehot)
+        dA = activations[-1] - y_onehot
         
-        # Backward through each device in reverse order
         for device_id in sorted(self.device_connections.keys(), reverse=True):
-            socket = self.device_connections[device_id]
-            socket.send_pyobj({
-                'command': 'backward',
-                'grad_input': dA
-            })
-            response = socket.recv_pyobj()
-            dA = response['grad_output']
-
+            stub = self.device_connections[device_id]
+            response = stub.Backward(pb2.BackwardRequest(
+                grad_input=dA.flatten().tolist(),
+                grad_shape=list(dA.shape)
+            ))
+            
+            dA = np.array(response.grad_output).reshape(response.grad_shape)
+    
     def update_parameters(self, learning_rate):
         """Update parameters on all devices"""
         for device_id in sorted(self.device_connections.keys()):
-            socket = self.device_connections[device_id]
-            socket.send_pyobj({
-                'command': 'update',
-                'learning_rate': learning_rate
-            })
-            socket.recv_pyobj()
+            stub = self.device_connections[device_id]
+            stub.Update(pb2.UpdateRequest(learning_rate=learning_rate))
 
     def train(self, train_loader, val_loader, epochs=100, learning_rate=0.1):
         print("\nStarting distributed training across devices...")

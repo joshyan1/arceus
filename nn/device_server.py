@@ -1,8 +1,11 @@
-import zmq
+import grpc
+from concurrent import futures
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from protos import device_service_pb2 as pb2
+from protos import device_service_pb2_grpc as pb2_grpc
 
 class Layer:
     def __init__(self, input_size, output_size, activation='relu'):
@@ -125,58 +128,73 @@ class Device:
         for layer in self.layers:
             layer.update(learning_rate)
 
-class DeviceServer:
-    def __init__(self, port):
-        self.port = port
+class DeviceServicer(pb2_grpc.DeviceServiceServicer):
+    def __init__(self):
         self.device = None
+    
+    def Initialize(self, request, context):
+        """Initialize device with layer configurations"""
+        layer_configs = [
+            {
+                'input_size': config.input_size,
+                'output_size': config.output_size,
+                'activation': config.activation
+            }
+            for config in request.layer_configs
+        ]
         
-        # Setup ZMQ context and socket
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REP)
-        self.socket.bind(f"tcp://0.0.0.0:{port}")
+        self.device = Device(layer_configs, device_id=request.device_id)
         
-    def start(self):
-        print(f"Starting device server on port {self.port}")
+        return pb2.InitResponse(
+            status='initialized',
+            device_id=self.device.device_id
+        )
+    
+    def Forward(self, request, context):
+        """Forward pass through device layers"""
+        input_array = np.array(request.input).reshape(request.input_shape)
+        output = self.device.forward(input_array)
         
-        while True:
-            message = self.socket.recv_pyobj()
-            command = message['command']
-            if command == 'init':
-                self.device = Device(
-                    layer_configs=message['layer_configs'],
-                    device_id=message['device_id']
-                )
-                self.socket.send_pyobj({
-                    'status': 'initialized',
-                    'device_id': self.device.device_id
-                })
-                
-            elif command == 'forward':
-                print("recevied forward command")
-                A_prev = message['input']
-                output = self.device.forward(A_prev)
-                self.socket.send_pyobj({'output': output})
-                
-            elif command == 'backward':
-                dA = message['grad_input']
-                dA_prev = self.device.backward(dA)
-                self.socket.send_pyobj({'grad_output': dA_prev})
-                
-            elif command == 'update':
-                self.device.update(message['learning_rate'])
-                self.socket.send_pyobj({'status': 'updated'})
+        return pb2.ForwardResponse(
+            output=output.flatten().tolist(),
+            output_shape=list(output.shape)
+        )
+    
+    def Backward(self, request, context):
+        """Backward pass through device layers"""
+        grad_input = np.array(request.grad_input).reshape(request.grad_shape)
+        grad_output = self.device.backward(grad_input)
+        
+        return pb2.BackwardResponse(
+            grad_output=grad_output.flatten().tolist(),
+            grad_shape=list(grad_output.shape)
+        )
+    
+    def Update(self, request, context):
+        """Update device parameters"""
+        self.device.update(request.learning_rate)
+        return pb2.UpdateResponse(status='updated')
+    
+    def Ping(self, request, context):
+        """Health check"""
+        return pb2.PingResponse(status='connection successful')
 
-            elif command == 'ping':
-                print("Received ping")
-                self.socket.send_pyobj({'status': 'connection successful'})
-
+def serve(port):
+    """Start gRPC server"""
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    pb2_grpc.add_DeviceServiceServicer_to_server(
+        DeviceServicer(), server
+    )
+    server.add_insecure_port(f'[::]:{port}')
+    server.start()
+    print(f"Device server started on port {port}")
+    server.wait_for_termination()
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) != 2:
         print("Usage: python device_server.py <port>")
         sys.exit(1)
-        
+    
     port = int(sys.argv[1])
-    device_server = DeviceServer(port)
-    device_server.start()
+    serve(port)

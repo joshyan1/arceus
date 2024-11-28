@@ -1,9 +1,12 @@
+import grpc
 import subprocess
 import requests
 import sys
 import time
 import signal
 import os
+from protos import device_service_pb2 as pb2
+from protos import device_service_pb2_grpc as pb2_grpc
 
 def get_local_ip():
     """Get the local IP address of this machine"""
@@ -48,25 +51,25 @@ class DeviceClient:
     def start_device_server(self):
         """Start the device server as a subprocess"""
         try:
-            # Get the absolute path to device_server.py
             current_dir = os.path.dirname(os.path.abspath(__file__))
             server_path = os.path.join(current_dir, 'device_server.py')
             
-            # Start the device server
             self.device_process = subprocess.Popen(
                 [sys.executable, server_path, str(self.device_port)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
             
-            # Wait a moment for the server to start
+            # Wait for server to start
             time.sleep(2)
             
-            if self.device_process.poll() is not None:
-                # Process has terminated
-                stdout, stderr = self.device_process.communicate()
-                raise RuntimeError(f"Device server failed to start: {stderr.decode()}")
-                
+            # Test connection using gRPC
+            with grpc.insecure_channel(f'localhost:{self.device_port}') as channel:
+                stub = pb2_grpc.DeviceServiceStub(channel)
+                response = stub.Ping(pb2.PingRequest())
+                if response.status != 'connection successful':
+                    raise RuntimeError("Failed to connect to device server")
+            
             print(f"Device server started on port {self.device_port}")
             return True
             

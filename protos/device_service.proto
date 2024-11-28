@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package device;
+
+// Service definition for device server
+service DeviceService {
+  // Initialize device with layer configurations
+  rpc Initialize(InitRequest) returns (InitResponse);
+  
+  // Forward pass through device layers
+  rpc Forward(ForwardRequest) returns (ForwardResponse);
+  
+  // Backward pass through device layers
+  rpc Backward(BackwardRequest) returns (BackwardResponse);
+  
+  // Update layer parameters
+  rpc Update(UpdateRequest) returns (UpdateResponse);
+  
+  // Health check/ping
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+// Layer configuration
+message LayerConfig {
+  int32 input_size = 1;
+  int32 output_size = 2;
+  string activation = 3;
+}
+
+// Initialize request with layer configurations
+message InitRequest {
+  repeated LayerConfig layer_configs = 1;
+  int32 device_id = 2;
+}
+
+message InitResponse {
+  string status = 1;
+  int32 device_id = 2;
+}
+
+// Forward pass request/response
+message ForwardRequest {
+  repeated float input = 1;  // Flattened input array
+  repeated int32 input_shape = 2;  // Original shape of input
+}
+
+message ForwardResponse {
+  repeated float output = 1;  // Flattened output array
+  repeated int32 output_shape = 2;  // Shape of output
+}
+
+// Backward pass request/response
+message BackwardRequest {
+  repeated float grad_input = 1;  // Flattened gradient array
+  repeated int32 grad_shape = 2;  // Shape of gradient
+}
+
+message BackwardResponse {
+  repeated float grad_output = 1;  // Flattened gradient array
+  repeated int32 grad_shape = 2;  // Shape of gradient
+}
+
+// Parameter update request/response
+message UpdateRequest {
+  float learning_rate = 1;
+}
+
+message UpdateResponse {
+  string status = 1;
+}
+
+// Health check/ping messages
+message PingRequest {}
+
+message PingResponse {
+  string status = 1;
+} 
