@@ -6,5 +6,3 @@ __pycache__/
 /simple-federated-learning-main/
 
 data/
-
-validation/metrics/
