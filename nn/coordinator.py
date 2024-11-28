@@ -283,7 +283,7 @@ class DistributedNeuralNetwork:
                 print(f"Error retrieving teraflops for device {device_id}: {e}")
 
         # Log the aggregated teraflops data
-        print(f"Aggregated teraflops data: {self.teraflops_data}")
+        # print(f"Aggregated teraflops data: {self.teraflops_data}")
 
         # Store the aggregated data in the global previous training sessions list
         with lock:
