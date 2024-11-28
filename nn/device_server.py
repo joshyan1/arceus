@@ -124,10 +124,10 @@ class Device:
         transfer_time = time.time() - start_transfer
         self.timing_stats['data_transfer'].append(transfer_time)
         
-        self.logger.info(
+        """ self.logger.info(
             f"Forward pass starting with input shape {A_prev.shape}",
             extra={'device_id': self.device_id}
-        )
+        ) """
         
         # Store activations for backward pass
         self.activations = [A_prev]
@@ -148,10 +148,10 @@ class Device:
         compute_time = time.time() - start_compute
         self.timing_stats['forward_compute'].append(compute_time)
         
-        self.logger.info(
+        """ self.logger.info(
             f"Forward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
             extra={'device_id': self.device_id}
-        )
+        ) """
         
         return A.detach().cpu().numpy()
     
@@ -164,10 +164,10 @@ class Device:
         transfer_time = time.time() - start_transfer
         self.timing_stats['data_transfer'].append(transfer_time)
         
-        self.logger.info(
+        """ self.logger.info(
             f"Backward pass starting with gradient shape {dA.shape}",
             extra={'device_id': self.device_id}
-        )
+        ) """
         
         # Backward through each layer in reverse
         start_compute = time.time()
@@ -176,37 +176,37 @@ class Device:
             layer = self.layers[i]
             dA = layer.backward(dA)
             layer_time = time.time() - layer_start
-            self.logger.info(
+            """ self.logger.info(
                 f"Layer {i} backward complete ({layer_time:.4f}s)",
                 extra={'device_id': self.device_id}
-            )
+            ) """
         
         compute_time = time.time() - start_compute
         self.timing_stats['backward_compute'].append(compute_time)
         
-        self.logger.info(
+        """ self.logger.info(
             f"Backward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
             extra={'device_id': self.device_id}
-        )
+        ) """
         
         return dA.detach().cpu().numpy()
     
     def update(self, learning_rate):
         """Update parameters of all layers"""
         start_time = time.time()
-        self.logger.info(
+        """ self.logger.info(
             f"Updating parameters with learning rate {learning_rate}",
             extra={'device_id': self.device_id}
-        )
+        ) """
         
         for i, layer in enumerate(self.layers):
             layer_start = time.time()
             layer.update(learning_rate)
             layer_time = time.time() - layer_start
-            self.logger.info(
+            """ self.logger.info(
                 f"Updated parameters for layer {i} ({layer_time:.4f}s)",
                 extra={'device_id': self.device_id}
-            )
+            ) """
         
         update_time = time.time() - start_time
         self.timing_stats['parameter_updates'].append(update_time)
