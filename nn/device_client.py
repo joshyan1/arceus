@@ -119,11 +119,13 @@ class DeviceClient:
     def cleanup(self):
         """Clean up resources and stop the device server"""
         if self.device_process:
-            try:
-                # Try to unregister from the API
-                requests.delete(f"{self.api_url}/api/devices/{self.device_port}")
-            except:
-                pass
+            # try:
+            #     # Try to unregister from the API
+            #     print("unregister from API")
+            #     requests.delete(f"{self.api_url}/api/devices/{self.device_port}")
+            #     print("unregister from API 2")
+            # except:
+            #     pass
                 
             # Kill the device server process
             self.device_process.terminate()
@@ -133,6 +135,8 @@ class DeviceClient:
                 self.device_process.kill()
             
             self.device_process = None
+        else:
+            print("No device process to terminate.")
 
 def main():
     import argparse
