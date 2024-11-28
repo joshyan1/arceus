@@ -1,9 +1,29 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 
 export default function Progress({ progress }: { progress: number }) {
+  return (
+    <Card className="flex flex-col p-4">
+      <div className="mb-4 flex justify-between font-supply text-sm text-muted-foreground">
+        <div>PROGRESS</div>
+        <div className="flex items-center gap-2">
+          <Clock className="size-3.5" />
+          2:15:32
+        </div>
+      </div>
+      <div className="mb-1 flex items-end justify-between">
+        <div className="text-4xl font-medium">75%</div>
+        <div className="text-lg text-muted-foreground">75/100 Epochs</div>
+      </div>
+      <ProgressBar progress={progress} />
+    </Card>
+  );
+}
+
+export function ProgressBar({ progress }: { progress: number }) {
   const scaledProgress = Math.floor(progress / 2);
 
   return (

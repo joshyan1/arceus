@@ -109,6 +109,7 @@ export default function PerformanceChart() {
                   r={8}
                   fill="var(--color-desktop)"
                   filter="blur(8px)"
+                  className="animate-pulse"
                 />
               </>
             ) : (
