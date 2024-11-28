@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from nn.coordinator import DistributedNeuralNetwork
+from nn.coordinator import DistributedNeuralNetwork, previous_training_sessions
 import threading
 import os
 from typing import Dict, Optional
@@ -244,6 +244,16 @@ def get_aggregated_teraflops():
         return jsonify({'error': 'No teraflops data available'}), 404
 
     return jsonify(coordinator.teraflops_data), 200
+
+@app.route('/api/previous_teraflops', methods=['GET'])
+def get_previous_teraflops():
+    """Endpoint to retrieve teraflops data from previous training sessions."""
+    with lock:
+        if not previous_training_sessions:
+            return jsonify({'error': 'No previous training sessions found'}), 404
+
+        print(f"Previous training sessions: {previous_training_sessions}")  # Log the previous sessions
+        return jsonify(previous_training_sessions), 200
 
 def create_app():
     """Create and configure the Flask app"""

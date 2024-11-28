@@ -7,6 +7,12 @@ from tqdm import tqdm
 import time
 from protos import device_service_pb2 as pb2
 from protos import device_service_pb2_grpc as pb2_grpc
+from threading import Lock
+
+
+# Global variable to store previous training sessions' teraflops data
+previous_training_sessions = []
+lock = Lock()
 
 class DistributedNeuralNetwork:
     def __init__(self, layer_sizes, quantization_bits=8):
@@ -278,6 +284,10 @@ class DistributedNeuralNetwork:
 
         # Log the aggregated teraflops data
         print(f"Aggregated teraflops data: {self.teraflops_data}")
+
+        # Store the aggregated data in the global previous training sessions list
+        with lock:
+            previous_training_sessions.append(self.teraflops_data)
 
     def compute_loss(self, y_true, y_pred):
         """Compute cross entropy loss using PyTorch"""
