@@ -1,6 +1,6 @@
 # Arceus
 
-Hi everyone! Welcome to our distributed training framework, built from first principles leveraging model parallelism to optimize training on Apple M-series clusters! Right now, please train our FFN with the MNIST dataset!
+Hi everyone! Welcome to our distributed training framework, built from first principles leveraging model parallelism to optimize training on Apple M-series clusters. Arceus now supports model parallelism across multiple devices on the same local network!
 
 ## Run
 To run this version of Arceus, please first initialize a virtual environment and install all required modules
@@ -10,7 +10,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-First initialize the Flask server to handle device registration and training orchestration
+To run Arceus across multiple machines on your local network, first initialize the Flask server to handle device registration and training orchestration
 ```shell
 python -m api.server
 ```
@@ -18,17 +18,17 @@ python -m api.server
 Now, register your devices. There must be atleast 1 and at most the number equal to the layers of your model.
 On each of your devices, run
 ```shell
-python -m nn.device_client
+python -m nn.device_client --api-url <flask-server-ip>
 ```
 
 Then, initialize your devices with the layers of the model
 ```shell
-curl -X POST http://localhost:4000/api/network/initialize
+curl -X POST http://<flask-server-ip>/api/network/initialize
 ```
 
 Finally, train with the following request
 ```shell
-curl -X POST http://localhost:5000/api/network/train \
+curl -X POST http://<flask-server-ip>/api/network/train \
      -H "Content-Type: application/json" \
      -d '{"epochs": 10, "learning_rate": 0.1}'
 ```
@@ -41,13 +41,4 @@ Starting distributed training across devices...
 Learning rate: 0.1
 Quantization bits: 8
 Device: mps
-```
-
-## Network Setup
-
-To run Arceus across multiple machines on your local network:
-
-1. Start the API server on your main machine:
-```shell
-python -m api.server
 ```

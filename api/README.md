@@ -1,7 +1,7 @@
 # API
 
 ## Run
-To start you Flask Server, run
+To start your Flask Server, run
 ```shell
 python -m api.server
 ```
@@ -19,7 +19,6 @@ Registers a new device with the server
 ```
 POST /api/devices/register
 ```
-
 ### Get Devices
 Retrieves all registered devices 
 ```
@@ -44,3 +43,4 @@ Remove a registered device from the server
 ```
 DELETE /api/devices/<int:port>
 ```
+

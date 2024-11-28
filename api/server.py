@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import zmq
 from nn.coordinator import DistributedNeuralNetwork
 import threading
 import os
