@@ -1,3 +1,9 @@
+import os
+import sys
+# Add project root to Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+
 import grpc
 from concurrent import futures
 import numpy as np
@@ -181,20 +187,44 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
 
 def serve(port):
     """Start gRPC server"""
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    pb2_grpc.add_DeviceServiceServicer_to_server(
-        DeviceServicer(), server
-    )
-    server.add_insecure_port(f'[::]:{port}')
-    server.start()
-    print(f"Device server started on port {port}")
-    server.wait_for_termination()
+    try:
+        print(f"Creating gRPC server...")
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        
+        print(f"Adding servicer...")
+        pb2_grpc.add_DeviceServiceServicer_to_server(
+            DeviceServicer(), server
+        )
+        
+        # Try to bind to the port
+        address = f'0.0.0.0:{port}'
+        print(f"Binding to address: {address}")
+        port = server.add_insecure_port(address)
+        
+        # Start the server
+        print("Starting server...")
+        server.start()
+        print(f"Device server successfully started and listening on {address}")
+        
+        # Keep the server running
+        server.wait_for_termination()
+        
+    except Exception as e:
+        print(f"Failed to start server: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) != 2:
-        print("Usage: python device_server.py <port>")
+        print("Usage: python device_server.py <port>", file=sys.stderr)
         sys.exit(1)
     
-    port = int(sys.argv[1])
-    serve(port)
+    try:
+        port = int(sys.argv[1])
+        print(f"Attempting to start server on port {port}...")
+        serve(port)
+    except ValueError:
+        print(f"Invalid port number: {sys.argv[1]}", file=sys.stderr)
+        sys.exit(1)

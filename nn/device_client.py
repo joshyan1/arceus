@@ -54,27 +54,44 @@ class DeviceClient:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             server_path = os.path.join(current_dir, 'device_server.py')
             
+            print(f"Starting device server on port {self.device_port}...")
+            
+            # Start server without pipes to see output directly
             self.device_process = subprocess.Popen(
-                [sys.executable, server_path, str(self.device_port)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                [sys.executable, server_path, str(self.device_port)]
             )
             
-            # Wait for server to start
+            # Wait and check if process is still running
             time.sleep(2)
+            if self.device_process.poll() is not None:
+                raise RuntimeError("Device server process terminated unexpectedly")
             
-            # Test connection using gRPC
-            with grpc.insecure_channel(f'localhost:{self.device_port}') as channel:
-                stub = pb2_grpc.DeviceServiceStub(channel)
-                response = stub.Ping(pb2.PingRequest())
-                if response.status != 'connection successful':
-                    raise RuntimeError("Failed to connect to device server")
+            # Wait for server to be ready
+            max_attempts = 5
+            for attempt in range(max_attempts):
+                try:
+                    print(f"Attempting to connect to device server (attempt {attempt + 1}/{max_attempts})...")
+                    with grpc.insecure_channel(f'0.0.0.0:{self.device_port}') as channel:
+                        channel_ready = grpc.channel_ready_future(channel)
+                        channel_ready.result(timeout=2)  # Wait for channel to be ready
+                        
+                        stub = pb2_grpc.DeviceServiceStub(channel)
+                        response = stub.Ping(pb2.PingRequest())
+                        if response.status == 'connection successful':
+                            print(f"Successfully connected to device server on {self.local_ip}:{self.device_port}")
+                            return True
+                except Exception as e:
+                    if attempt < max_attempts - 1:
+                        print(f"Connection attempt failed: {e}")
+                        time.sleep(2)
+                    else:
+                        raise RuntimeError(f"Failed to connect after {max_attempts} attempts")
             
-            print(f"Device server started on port {self.device_port}")
-            return True
-            
+            return False
+                
         except Exception as e:
             print(f"Error starting device server: {e}")
+            self.cleanup()
             return False
 
     def register_with_api(self):
