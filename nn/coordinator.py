@@ -142,8 +142,8 @@ class DistributedNeuralNetwork:
             y_true = torch.from_numpy(y_true).to(self.device)
         
         # Create one-hot encoding using PyTorch
-        m = y_true.shape[0]
-        y_onehot = torch.zeros(m, activations[-1].shape[1], device=self.device)
+        batch_size = y_true.shape[0]
+        y_onehot = torch.zeros(batch_size, activations[-1].shape[1], device=self.device)
         y_onehot.scatter_(1, y_true.unsqueeze(1), 1)
         dA = activations[-1] - y_onehot
         prep_time = time.time() - start_prep
