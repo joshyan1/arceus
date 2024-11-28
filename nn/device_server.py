@@ -47,15 +47,15 @@ class Layer:
     
     def backward(self, dA):
         """Backward pass for a single layer"""
-        m = self.A_prev.size(0)
+        batch_size = self.A_prev.size(0)
         
         if self.activation == 'relu':
             dZ = dA * (self.Z > 0)
         else:  # softmax
             dZ = dA
             
-        self.dW = torch.mm(self.A_prev.t(), dZ) / m
-        self.db = torch.sum(dZ, dim=0, keepdim=True) / m
+        self.dW = torch.mm(self.A_prev.t(), dZ) / batch_size
+        self.db = torch.sum(dZ, dim=0, keepdim=True) / batch_size
         dA_prev = torch.mm(dZ, self.W.t())
         
         return dA_prev
