@@ -13,16 +13,18 @@ registered_devices = {}
 
 @app.route('/api/devices/register', methods=['POST'])
 def register_device():
-    """Register a new device with its port number"""
+    """Register a new device with its IP and port number"""
     data = request.get_json()
     
-    if not data or 'port' not in data:
-        return jsonify({'error': 'Port number is required'}), 400
+    if not data or 'port' not in data or 'ip' not in data:
+        return jsonify({'error': 'IP and port number are required'}), 400
         
     port = data['port']
+    ip = data['ip']
+    device_address = f"{ip}:{port}"
     
     with lock:
-        if port in registered_devices:
+        if device_address in registered_devices:
             return jsonify({'error': 'Device already registered'}), 409
             
         # Initialize coordinator if this is the first device
@@ -31,9 +33,9 @@ def register_device():
             coordinator = DistributedNeuralNetwork(layer_sizes=[784, 128, 64, 10])
             
         # Try to connect to the device
-        if coordinator.connect_to_device(port):
+        if coordinator.connect_to_device(ip, port):
             device_id = len(registered_devices) + 1
-            registered_devices[port] = device_id
+            registered_devices[device_address] = device_id
             return jsonify({
                 'message': 'Device registered successfully',
                 'device_id': device_id
@@ -132,4 +134,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=4000, debug=True)
+    app.run(host='0.0.0.0', port=4000)
