@@ -1,7 +1,7 @@
 # API
 
 ## Run
-To start you Flask Server, run
+To start your Flask Server, run
 ```shell
 python -m api.server
 ```
