@@ -140,10 +140,10 @@ class Device:
             A = layer.forward(A)
             self.activations.append(A)
             layer_time = time.time() - layer_start
-            self.logger.info(
+            """ self.logger.info(
                 f"Layer {i} forward: {self.activations[-2].shape} -> {A.shape} ({layer_time:.4f}s)",
                 extra={'device_id': self.device_id}
-            )
+            ) """
         
         compute_time = time.time() - start_compute
         self.timing_stats['forward_compute'].append(compute_time)
