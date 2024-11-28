@@ -1,20 +1,25 @@
 "use client";
 
 import { Card } from "../ui/card";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useLayoutEffect, Fragment } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [30, 20];
+  const dimensions = [30, 20, 20];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
     const totalWidth = containerRef.current.clientWidth;
     const numGaps = dimensions.length - 1;
-    // Account for the width of each layer (w-10 = 2.5rem = 40px) and divide remaining space
-    const spacing = (totalWidth - dimensions.length * 40) / (numGaps + 1);
+    const spacing =
+      (totalWidth - dimensions.length * 40) / (dimensions.length + 1);
+
+    console.log("totalWidth", totalWidth);
+    console.log("numGaps", numGaps);
+    console.log("spacing", spacing);
+
     setLayerSpacing(spacing);
   }, [dimensions.length]);
 
@@ -22,20 +27,22 @@ export default function ModelVisualization() {
     <Card
       ref={containerRef}
       className="relative col-span-2 flex items-center justify-evenly font-supply"
+      style={{ minHeight: "200px" }}
     >
-      {dimensions.map((dimension, i) => (
-        <Layer
-          key={i}
-          layer={i + 1}
-          dimension={dimension}
-          spacing={layerSpacing}
-          connections={
-            i < connections.length
-              ? { data: connections[i], nextDimension: dimensions[i + 1] }
-              : undefined
-          }
-        />
-      ))}
+      {layerSpacing > 0 &&
+        dimensions.map((dimension, i) => (
+          <Layer
+            key={i}
+            layer={i + 1}
+            dimension={dimension}
+            spacing={layerSpacing}
+            connections={
+              i < connections.length
+                ? { data: connections[i], nextDimension: dimensions[i + 1] }
+                : undefined
+            }
+          />
+        ))}
     </Card>
   );
 }
@@ -57,15 +64,21 @@ function Layer({
         <div className="relative flex h-full w-full justify-center">
           {connections &&
             connections.data.map(([from, to], index) => (
-              <>
+              <Fragment key={index}>
                 <div
-                  key={index}
                   style={{
                     top: `${(from / dimension) * 100}%`,
                   }}
                   className="absolute size-1.5 rounded-full bg-foreground"
                 />
-              </>
+                <div
+                  style={{
+                    top: `${(to / connections.nextDimension) * 100}%`,
+                    transform: `translateX(${spacing + 40}px)`,
+                  }}
+                  className="absolute size-1.5 rounded-full bg-foreground"
+                />
+              </Fragment>
             ))}
         </div>
       </div>
