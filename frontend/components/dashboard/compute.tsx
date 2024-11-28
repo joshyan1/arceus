@@ -16,9 +16,7 @@ export default function Compute() {
         <div className="text-4xl font-medium">10.88</div>
         <div className="text-lg text-muted-foreground">0.32 H100s</div>
       </div>
-      <div className="h-36">
-        <PerformanceChart />
-      </div>
+      <PerformanceChart />
     </Card>
   );
 }

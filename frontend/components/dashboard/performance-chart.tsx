@@ -65,59 +65,60 @@ const chartConfig = {
 
 export default function PerformanceChart() {
   return (
-    <ChartContainer config={chartConfig}>
-      <LineChart
-        accessibilityLayer
-        data={chartData}
-        margin={{
-          left: 4,
-          right: 4,
-          top: 12,
-        }}
-      >
-        <CartesianGrid vertical={false} />
-        <ChartTooltip
-          cursor={false}
-          animationDuration={100}
-          labelFormatter={(label, payload) => {
-            const timestamp = payload[0].payload.timestamp;
-            return formatTimestamp(timestamp);
+    <div className="h-36">
+      <ChartContainer config={chartConfig} height={144}>
+        <LineChart
+          accessibilityLayer
+          data={chartData}
+          margin={{
+            left: 4,
+            right: 4,
+            top: 12,
           }}
-          content={<ChartTooltipContent indicator="dot" />}
-        />
-
-        <Line
-          dataKey="desktop"
-          type="linear"
-          fill="var(--color-desktop)"
-          fillOpacity={0.4}
-          stroke="var(--color-desktop)"
-          isAnimationActive={false}
-          dot={(props) => {
-            const isLast = props.index === 7;
-            return isLast ? (
-              <>
-                <circle
-                  cx={props.cx}
-                  cy={props.cy}
-                  r={4}
-                  fill="var(--color-desktop)"
-                />
-                <circle
-                  cx={props.cx}
-                  cy={props.cy}
-                  r={8}
-                  fill="var(--color-desktop)"
-                  filter="blur(8px)"
-                  className="animate-pulse"
-                />
-              </>
-            ) : (
-              <></>
-            );
-          }}
-        />
-      </LineChart>
-    </ChartContainer>
+        >
+          <CartesianGrid vertical={false} />
+          <ChartTooltip
+            cursor={true}
+            animationDuration={100}
+            labelFormatter={(label, payload) => {
+              const timestamp = payload[0].payload.timestamp;
+              return formatTimestamp(timestamp);
+            }}
+            content={<ChartTooltipContent indicator="dot" />}
+          />
+          <Line
+            dataKey="desktop"
+            type="linear"
+            fill="var(--color-desktop)"
+            fillOpacity={0.4}
+            stroke="var(--color-desktop)"
+            isAnimationActive={false}
+            dot={(props) => {
+              const isLast = props.index === 7;
+              return isLast ? (
+                <>
+                  <circle
+                    cx={props.cx}
+                    cy={props.cy}
+                    r={4}
+                    fill="var(--color-desktop)"
+                  />
+                  <circle
+                    cx={props.cx}
+                    cy={props.cy}
+                    r={8}
+                    fill="var(--color-desktop)"
+                    filter="blur(8px)"
+                    className="animate-pulse"
+                  />
+                </>
+              ) : (
+                <></>
+              );
+            }}
+          />
+        </LineChart>
+      </ChartContainer>
+    </div>
   );
 }

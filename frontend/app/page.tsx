@@ -3,6 +3,7 @@ import Progress from "@/components/dashboard/progress";
 import { Card } from "@/components/ui/card";
 import Devices from "@/components/dashboard/devices";
 import Compute from "@/components/dashboard/compute";
+import Loss from "@/components/dashboard/loss";
 
 export default function Home() {
   return (
@@ -14,7 +15,11 @@ export default function Home() {
           <Progress progress={75} />
           <Devices />
         </div>
-        <Card className="grow p-4">card3</Card>
+        <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
+          <Loss />
+          <Loss />
+          <Card className="col-span-2 p-4">cool thing</Card>
+        </div>
       </div>
     </div>
   );
