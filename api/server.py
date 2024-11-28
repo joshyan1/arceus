@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
-from nn.coordinator import DistributedNeuralNetwork
+from nn.coordinator import DistributedNeuralNetwork, previous_training_sessions
 import threading
 import os
 from typing import Dict, Optional
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import json
+import numpy as np
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ coordinator = None
 lock = threading.Lock()
 registered_devices = {}
 active_jobs: Dict[str, dict] = {}  # job_id -> job_config
+aggregated_teraflops_data = {}
 
 @app.route('/api/jobs', methods=['POST'])
 def create_job():
@@ -193,6 +195,7 @@ def start_training(job_id):
                 epochs=epochs, 
                 learning_rate=learning_rate
             )
+            print("Training completed. Aggregating teraflops data...")
             job_config['status'] = 'completed'
         
         thread = threading.Thread(target=train_thread)
@@ -219,6 +222,38 @@ def unregister_device(port):
             coordinator = None
             
         return jsonify({'message': 'Device unregistered successfully'})
+
+@app.route('/api/devices/teraflops', methods=['GET'])
+def get_device_teraflops():
+    """Endpoint to retrieve teraflops data from all devices."""
+    if coordinator is None:
+        return jsonify({'error': 'No active jobs or devices found'}), 404
+
+    teraflops_data = coordinator.get_device_teraflops()
+    
+    # Print the teraflops data for each device
+    for device_id, tflops in teraflops_data.items():
+        print(f"Device {device_id} - Forward TFLOPs: {tflops['forward_tflops']:.4f}, Backward TFLOPs: {tflops['backward_tflops']:.4f}")
+
+    return jsonify(teraflops_data), 200
+
+@app.route('/api/teraflops', methods=['GET'])
+def get_aggregated_teraflops():
+    """Endpoint to retrieve aggregated teraflops data."""
+    if coordinator is None or not hasattr(coordinator, 'teraflops_data') or not coordinator.teraflops_data:
+        return jsonify({'error': 'No teraflops data available'}), 404
+
+    return jsonify(coordinator.teraflops_data), 200
+
+@app.route('/api/previous_teraflops', methods=['GET'])
+def get_previous_teraflops():
+    """Endpoint to retrieve teraflops data from previous training sessions."""
+    with lock:
+        if not previous_training_sessions:
+            return jsonify({'error': 'No previous training sessions found'}), 404
+
+        print(f"Previous training sessions: {previous_training_sessions}")  # Log the previous sessions
+        return jsonify(previous_training_sessions), 200
 
 def create_app():
     """Create and configure the Flask app"""
