@@ -4,7 +4,7 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [30, 20, 20];
+  const dimensions = [30, 20, 10];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -58,33 +58,71 @@ function Layer({
   spacing: number;
   connections?: { data: Connection[]; nextDimension: number };
 }) {
+  if (connections) console.log("connections", connections);
+
+  const lineContainerRef = useRef<HTMLDivElement>(null);
+  const [lineContainerHeight, setLineContainerHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!lineContainerRef.current) return;
+    setLineContainerHeight(lineContainerRef.current.clientHeight);
+  }, [lineContainerRef.current]);
+
   return (
     <div className="flex h-5/6 w-10 flex-col justify-between rounded-lg border bg-muted/20 shadow-lg shadow-muted/50">
       <div className="h-full py-4">
-        <div className="relative flex h-full w-full justify-center">
+        <div
+          className="relative flex h-full w-full justify-center"
+          ref={lineContainerRef}
+        >
           {connections &&
-            connections.data.map(([from, to], index) => (
-              <Fragment key={index}>
-                <div
-                  style={{
-                    top: `${(from / dimension) * 100}%`,
-                  }}
-                  className="absolute size-1.5 rounded-full bg-foreground"
-                />
-                <div
-                  style={{
-                    top: `${(to / connections.nextDimension) * 100}%`,
-                    transform: `translateX(${spacing + 40}px)`,
-                  }}
-                  className="absolute size-1.5 rounded-full bg-foreground"
-                />
-              </Fragment>
-            ))}
+            connections.data.map(([from, to], index) => {
+              const top = {
+                from: from / (dimension - 1),
+                to: to / (connections.nextDimension - 1),
+              };
+
+              const verticalDistance =
+                (top.to - top.from) * lineContainerHeight;
+              const angle = Math.atan(verticalDistance / (spacing + 40));
+              const lineLength = Math.sqrt(
+                (spacing + 40) ** 2 + verticalDistance ** 2,
+              );
+
+              console.log("angle", angle);
+
+              return (
+                <Fragment key={index}>
+                  <div
+                    style={{
+                      top: `${top.from * 100}%`,
+                    }}
+                    className="absolute size-1.5 rounded-full bg-foreground"
+                  />
+                  <div
+                    style={{
+                      top: `${top.from * 100}%`,
+                      width: `${lineLength}px`,
+                      transformOrigin: "0 0",
+                      transform: `rotate(${angle}rad) translateY(2px)`,
+                    }}
+                    className="absolute left-5 h-px bg-foreground"
+                  />
+                  <div
+                    style={{
+                      top: `${top.to * 100}%`,
+                      transform: `translateX(${spacing + 40}px)`,
+                    }}
+                    className="absolute size-1.5 rounded-full bg-foreground"
+                  />
+                </Fragment>
+              );
+            })}
         </div>
       </div>
-      <div className="flex flex-col items-center border-t bg-muted/40 py-2">
+      <div className="flex flex-col items-center border-t bg-muted/40 py-1 text-sm">
         <div>L{layer}</div>
-        <div className="text-xs text-muted-foreground">{dimension}</div>
+        <div className="text-muted-foreground">{dimension}</div>
       </div>
     </div>
   );
