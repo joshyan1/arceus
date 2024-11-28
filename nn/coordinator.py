@@ -35,10 +35,19 @@ class DistributedNeuralNetwork:
             print(f"Maximum number of devices ({self.max_devices}) reached. Skipping connection to {ip}:{port}")
             return False
             
+        print(f"tcp://{ip}:{port}")
+
         try:
             socket = self.context.socket(zmq.REQ)
             socket.connect(f"tcp://{ip}:{port}")
             device_id = len(self.device_connections) + 1
+
+            socket.send_pyobj({'command': "ping"})
+            
+            # Wait for the server response
+            response = socket.recv_pyobj()
+            print("Response from server:", response)
+
             self.device_connections[device_id] = socket
             print(f"Connected to device {device_id} at port {port} ({len(self.device_connections)}/{self.max_devices} devices)")
             return True
@@ -101,9 +110,11 @@ class DistributedNeuralNetwork:
 
     def forward(self, X):
         """Distributed forward pass with quantized data"""
+        print("Inside forward pass")
         if isinstance(X, torch.Tensor):
             X = X.detach().cpu().numpy()
-            
+        
+        print("passed torch")
         # Ensure input is 2D
         if len(X.shape) == 1:
             X = X.reshape(1, -1)
@@ -112,17 +123,22 @@ class DistributedNeuralNetwork:
         elif len(X.shape) == 4:
             X = X.reshape(X.shape[0], -1)
         
+        print("quantizing")
         A = self.quantize(X)
         activations = [X]
-        
+        print(self.device_connections)
         # Forward through each device in order
         for device_id in sorted(self.device_connections.keys()):
+            print("entered loop")
             socket = self.device_connections[device_id]
             socket.send_pyobj({
                 'command': 'forward',
                 'input': A
             })
+            print("received response")
             response = socket.recv_pyobj()
+            print("received response")
+
             A = response['output']
             activations.append(A)
             

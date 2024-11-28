@@ -141,6 +141,9 @@ class DeviceServer:
         while True:
             message = self.socket.recv_pyobj()
             command = message['command']
+
+            if command:
+                print("received command")
             
             if command == 'init':
                 self.device = Device(
@@ -153,6 +156,7 @@ class DeviceServer:
                 })
                 
             elif command == 'forward':
+                print("recevied forward command")
                 A_prev = message['input']
                 output = self.device.forward(A_prev)
                 self.socket.send_pyobj({'output': output})
@@ -167,6 +171,7 @@ class DeviceServer:
                 self.socket.send_pyobj({'status': 'updated'})
 
             elif command =="ping":
+                print("Received ping")
                 self.socket.send_pyobj({'status': 'connection successful'})
 
 
