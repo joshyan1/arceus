@@ -12,6 +12,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from protos import device_service_pb2 as pb2
 from protos import device_service_pb2_grpc as pb2_grpc
+import logging
+import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [Device %(device_id)s] %(message)s',
+    datefmt='%H:%M:%S'
+)
 
 class Layer:
     def __init__(self, input_size, output_size, activation='relu'):
@@ -59,26 +68,33 @@ class Layer:
 
 class Device:
     def __init__(self, layer_configs, device_id=0):
-        """
-        Initialize device with multiple layers
-        layer_configs: list of dicts, each containing:
-            - input_size
-            - output_size
-            - activation
-        """
         self.device_id = device_id
+        self.logger = logging.getLogger(__name__)
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        
+        # Initialize timing statistics
+        self.timing_stats = {
+            'forward_compute': [],
+            'backward_compute': [],
+            'data_transfer': [],
+            'parameter_updates': []
+        }
         
         # Initialize layers
         self.layers = []
-        for config in layer_configs:
+        self.logger.info(f"Initializing device with {len(layer_configs)} layers", extra={'device_id': self.device_id})
+        for i, config in enumerate(layer_configs):
+            self.logger.info(
+                f"Layer {i}: {config['input_size']} -> {config['output_size']} ({config['activation']})",
+                extra={'device_id': self.device_id}
+            )
             layer = Layer(
                 input_size=config['input_size'],
                 output_size=config['output_size'],
                 activation=config['activation']
             )
             self.layers.append(layer)
-        
+    
     def quantize(self, x, bits=8):
         """Quantize gradients to reduce communication overhead"""
         if isinstance(x, torch.Tensor):
@@ -94,45 +110,122 @@ class Device:
     
     def forward(self, A_prev):
         """Forward pass through all layers in this device"""
-        # Convert numpy array to torch tensor if needed
+        start_transfer = time.time()
         if isinstance(A_prev, np.ndarray):
-            # Ensure input is 2D
             if len(A_prev.shape) == 1:
                 A_prev = A_prev.reshape(1, -1)
-            elif len(A_prev.shape) == 3:  # For MNIST images
+            elif len(A_prev.shape) == 3:
                 A_prev = A_prev.reshape(A_prev.shape[0], -1)
-            elif len(A_prev.shape) == 4:  # For MNIST images with channel
+            elif len(A_prev.shape) == 4:
                 A_prev = A_prev.reshape(A_prev.shape[0], -1)
             
             A_prev = torch.from_numpy(A_prev).float().to(self.device)
         
-        # Store all activations for backward pass
+        transfer_time = time.time() - start_transfer
+        self.timing_stats['data_transfer'].append(transfer_time)
+        
+        self.logger.info(
+            f"Forward pass starting with input shape {A_prev.shape}",
+            extra={'device_id': self.device_id}
+        )
+        
+        # Store activations for backward pass
         self.activations = [A_prev]
         A = A_prev
         
         # Forward through each layer
-        for layer in self.layers:
+        start_compute = time.time()
+        for i, layer in enumerate(self.layers):
+            layer_start = time.time()
             A = layer.forward(A)
             self.activations.append(A)
-            
+            layer_time = time.time() - layer_start
+            self.logger.info(
+                f"Layer {i} forward: {self.activations[-2].shape} -> {A.shape} ({layer_time:.4f}s)",
+                extra={'device_id': self.device_id}
+            )
+        
+        compute_time = time.time() - start_compute
+        self.timing_stats['forward_compute'].append(compute_time)
+        
+        self.logger.info(
+            f"Forward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
+            extra={'device_id': self.device_id}
+        )
+        
         return A.detach().cpu().numpy()
     
     def backward(self, dA):
         """Backward pass through all layers in this device"""
+        start_transfer = time.time()
         if isinstance(dA, np.ndarray):
             dA = torch.from_numpy(dA).float().to(self.device)
         
+        transfer_time = time.time() - start_transfer
+        self.timing_stats['data_transfer'].append(transfer_time)
+        
+        self.logger.info(
+            f"Backward pass starting with gradient shape {dA.shape}",
+            extra={'device_id': self.device_id}
+        )
+        
         # Backward through each layer in reverse
+        start_compute = time.time()
         for i in reversed(range(len(self.layers))):
+            layer_start = time.time()
             layer = self.layers[i]
             dA = layer.backward(dA)
-            
+            layer_time = time.time() - layer_start
+            self.logger.info(
+                f"Layer {i} backward complete ({layer_time:.4f}s)",
+                extra={'device_id': self.device_id}
+            )
+        
+        compute_time = time.time() - start_compute
+        self.timing_stats['backward_compute'].append(compute_time)
+        
+        self.logger.info(
+            f"Backward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
+            extra={'device_id': self.device_id}
+        )
+        
         return dA.detach().cpu().numpy()
     
     def update(self, learning_rate):
         """Update parameters of all layers"""
-        for layer in self.layers:
+        start_time = time.time()
+        self.logger.info(
+            f"Updating parameters with learning rate {learning_rate}",
+            extra={'device_id': self.device_id}
+        )
+        
+        for i, layer in enumerate(self.layers):
+            layer_start = time.time()
             layer.update(learning_rate)
+            layer_time = time.time() - layer_start
+            self.logger.info(
+                f"Updated parameters for layer {i} ({layer_time:.4f}s)",
+                extra={'device_id': self.device_id}
+            )
+        
+        update_time = time.time() - start_time
+        self.timing_stats['parameter_updates'].append(update_time)
+        
+        # Log average times every 10 updates
+        if len(self.timing_stats['parameter_updates']) % 10 == 0:
+            avg_forward = np.mean(self.timing_stats['forward_compute'][-10:])
+            avg_backward = np.mean(self.timing_stats['backward_compute'][-10:])
+            avg_transfer = np.mean(self.timing_stats['data_transfer'][-10:])
+            avg_update = np.mean(self.timing_stats['parameter_updates'][-10:])
+            
+            self.logger.info(
+                f"Performance stats (last 10 operations):\n"
+                f"  Forward compute: {avg_forward:.4f}s\n"
+                f"  Backward compute: {avg_backward:.4f}s\n"
+                f"  Data transfer: {avg_transfer:.4f}s\n"
+                f"  Parameter updates: {avg_update:.4f}s",
+                extra={'device_id': self.device_id}
+            )
 
 class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     def __init__(self):
