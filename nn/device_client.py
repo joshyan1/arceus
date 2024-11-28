@@ -24,9 +24,10 @@ def get_local_ip():
     return IP
 
 class DeviceClient:
-    def __init__(self, api_url="http://localhost:4000", device_port=None):
+    def __init__(self, api_url="http://localhost:4000", device_port=None, job_id=None):
         self.api_url = api_url
         self.device_port = device_port or self._find_available_port(start_port=5001)
+        self.job_id = job_id
         self.device_process = None
         self.local_ip = get_local_ip()
         
@@ -101,7 +102,8 @@ class DeviceClient:
                 f"{self.api_url}/api/devices/register",
                 json={
                     'port': self.device_port,
-                    'ip': self.local_ip
+                    'ip': self.local_ip,
+                    'job_id': self.job_id
                 }
             )
             
@@ -140,9 +142,10 @@ def main():
     parser = argparse.ArgumentParser(description='Start a neural network device server and register with API')
     parser.add_argument('--api-url', default='http://localhost:4000', help='API server URL')
     parser.add_argument('--port', type=int, help='Port for device server (optional)')
+    parser.add_argument('--job-id', required=True, help='ID of the job to join')
     args = parser.parse_args()
     
-    client = DeviceClient(api_url=args.api_url, device_port=args.port)
+    client = DeviceClient(api_url=args.api_url, device_port=args.port, job_id=args.job_id)
     
     def signal_handler(signum, frame):
         print("\nReceived shutdown signal. Cleaning up...")
