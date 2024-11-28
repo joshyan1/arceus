@@ -19,7 +19,6 @@ Registers a new device with the server
 ```
 POST /api/devices/register
 ```
-
 ### Get Devices
 Retrieves all registered devices 
 ```
@@ -44,3 +43,4 @@ Remove a registered device from the server
 ```
 DELETE /api/devices/<int:port>
 ```
+
