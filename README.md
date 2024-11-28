@@ -15,20 +15,42 @@ To run Arceus across multiple machines on your local network, first initialize t
 python -m api.server
 ```
 
+First create register training job through the API, outlining the model and dataset configurations
+
+```shell
+curl -X POST http://localhost:4000/api/jobs \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model_config": {
+         "layer_sizes": [784, 128, 64, 10]
+       },
+       "dataset_config": {
+         "name": "MNIST",
+         "batch_size": 256,
+         "val_batch_size": 1000,
+         "normalize": {
+           "mean": [0.1307],
+           "std": [0.3081]
+         }
+       }
+     }'
+```
+This returns a response with a job ID.
+
 Now, register your devices. There must be atleast 1 and at most the number equal to the layers of your model.
 On each of your devices, run
 ```shell
-python -m nn.device_client --api-url <flask-server-ip>
+python -m nn.device_client --api-url <flask-server-ip> --job-id <job-id>
 ```
 
-Then, initialize your devices with the layers of the model
+Then, initialize your devices with the layers of the model by specifying the job
 ```shell
-curl -X POST http://<flask-server-ip>/api/network/initialize
+curl -X POST http://<flask-server-ip>/api/network/initialize/<job-id>
 ```
 
 Finally, train with the following request
 ```shell
-curl -X POST http://<flask-server-ip>/api/network/train \
+curl -X POST http://<flask-server-ip>/api/network/train/<job-id> \
      -H "Content-Type: application/json" \
      -d '{"epochs": 10, "learning_rate": 0.1}'
 ```
