@@ -2,6 +2,10 @@ from flask import Flask, request, jsonify
 from nn.coordinator import DistributedNeuralNetwork
 import threading
 import os
+from typing import Dict, Optional
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import json
 
 app = Flask(__name__)
 
@@ -9,32 +13,96 @@ app = Flask(__name__)
 coordinator = None
 lock = threading.Lock()
 registered_devices = {}
+active_jobs: Dict[str, dict] = {}  # job_id -> job_config
+
+@app.route('/api/jobs', methods=['POST'])
+def create_job():
+    """Create a new distributed training job"""
+    data = request.get_json()
+    
+    if not data or 'model_config' not in data or 'dataset_config' not in data:
+        return jsonify({'error': 'Model and dataset configurations are required'}), 400
+        
+    try:
+        job_id = str(len(active_jobs) + 1)  # Simple job ID generation
+        job_config = {
+            'model_config': data['model_config'],
+            'dataset_config': data['dataset_config'],
+            'devices': {},
+            'coordinator': None,
+            'status': 'created'  # created -> initialized -> training -> completed
+        }
+        active_jobs[job_id] = job_config
+        
+        return jsonify({
+            'message': 'Job created successfully',
+            'job_id': job_id
+        }), 201
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to create job: {str(e)}'}), 500
+
+@app.route('/api/jobs', methods=['GET'])
+def get_jobs():
+    """Get list of all jobs"""
+    return jsonify({
+        'jobs': [{
+            'job_id': job_id,
+            'status': config['status'],
+            'devices': len(config['devices']),
+            'model_config': config['model_config'],
+            'dataset_config': config['dataset_config']
+        } for job_id, config in active_jobs.items()]
+    })
+
+@app.route('/api/jobs/<job_id>', methods=['GET'])
+def get_job(job_id):
+    """Get details of a specific job"""
+    if job_id not in active_jobs:
+        return jsonify({'error': 'Job not found'}), 404
+        
+    config = active_jobs[job_id]
+    return jsonify({
+        'job_id': job_id,
+        'status': config['status'],
+        'devices': len(config['devices']),
+        'model_config': config['model_config'],
+        'dataset_config': config['dataset_config']
+    })
 
 @app.route('/api/devices/register', methods=['POST'])
 def register_device():
-    """Register a new device with its IP and port number"""
+    """Register a new device with its IP, port number, and job ID"""
     data = request.get_json()
     
-    if not data or 'port' not in data or 'ip' not in data:
-        return jsonify({'error': 'IP and port number are required'}), 400
+    if not data or 'port' not in data or 'ip' not in data or 'job_id' not in data:
+        return jsonify({'error': 'IP, port number, and job ID are required'}), 400
+        
+    job_id = data['job_id']
+    if job_id not in active_jobs:
+        return jsonify({'error': 'Invalid job ID'}), 404
         
     port = data['port']
     ip = data['ip']
     device_address = f"{ip}:{port}"
     
     with lock:
-        if device_address in registered_devices:
-            return jsonify({'error': 'Device already registered'}), 409
+        job_config = active_jobs[job_id]
+        
+        if device_address in job_config['devices']:
+            return jsonify({'error': 'Device already registered to this job'}), 409
             
         # Initialize coordinator if this is the first device
-        global coordinator
-        if coordinator is None:
-            coordinator = DistributedNeuralNetwork(layer_sizes=[784, 128, 64, 10])
+        if job_config['coordinator'] is None:
+            layer_sizes = job_config['model_config']['layer_sizes']
+            job_config['coordinator'] = DistributedNeuralNetwork(layer_sizes=layer_sizes)
             
+        coordinator = job_config['coordinator']
+        
         # Try to connect to the device
         if coordinator.connect_to_device(ip, port):
-            device_id = len(registered_devices) + 1
-            registered_devices[device_address] = device_id
+            device_id = len(job_config['devices']) + 1
+            job_config['devices'][device_address] = device_id
             return jsonify({
                 'message': 'Device registered successfully',
                 'device_id': device_id
@@ -42,38 +110,40 @@ def register_device():
         else:
             return jsonify({'error': 'Failed to connect to device'}), 500
 
-@app.route('/api/devices', methods=['GET'])
-def get_devices():
-    """Get list of registered devices"""
-    return jsonify({
-        'devices': [
-            {'port': port, 'device_id': device_id} 
-            for port, device_id in registered_devices.items()
-        ],
-        'max_devices': coordinator.max_devices if coordinator else 0,
-        'connected_devices': len(registered_devices)
-    })
-
-@app.route('/api/network/initialize', methods=['POST'])
-def initialize_network():
-    """Initialize the neural network across registered devices"""
-    if not coordinator:
+@app.route('/api/network/initialize/<job_id>', methods=['POST'])
+def initialize_network(job_id):
+    """Initialize the neural network for a specific job"""
+    if job_id not in active_jobs:
+        return jsonify({'error': 'Job not found'}), 404
+        
+    job_config = active_jobs[job_id]
+    
+    if not job_config['coordinator']:
         return jsonify({'error': 'No devices registered'}), 400
         
-    if len(registered_devices) == 0:
+    if len(job_config['devices']) == 0:
         return jsonify({'error': 'No devices available'}), 400
         
     try:
-        coordinator.initialize_devices()
+        job_config['coordinator'].initialize_devices()
+        job_config['status'] = 'initialized'
         return jsonify({'message': 'Network initialized successfully'})
     except Exception as e:
         return jsonify({'error': f'Failed to initialize network: {str(e)}'}), 500
 
-@app.route('/api/network/train', methods=['POST'])
-def start_training():
-    """Start the training process"""
-    if not coordinator:
+@app.route('/api/network/train/<job_id>', methods=['POST'])
+def start_training(job_id):
+    """Start the training process for a specific job"""
+    if job_id not in active_jobs:
+        return jsonify({'error': 'Job not found'}), 404
+        
+    job_config = active_jobs[job_id]
+    
+    if not job_config['coordinator']:
         return jsonify({'error': 'Network not initialized'}), 400
+        
+    if job_config['status'] != 'initialized':
+        return jsonify({'error': 'Network must be initialized before training'}), 400
         
     data = request.get_json() or {}
     epochs = data.get('epochs', 10)
@@ -82,23 +152,48 @@ def start_training():
     try:
         # Start training in a separate thread
         def train_thread():
-            from torch.utils.data import DataLoader
-            from torchvision import datasets, transforms
+            dataset_config = job_config['dataset_config']
             
-            # Define transforms
+            # Initialize dataset based on configuration
             transform = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,))
+                transforms.Normalize(**dataset_config.get('normalize', {'mean': (0.1307,), 'std': (0.3081,)}))
             ])
             
-            # Load MNIST dataset
-            train_dataset = datasets.MNIST('data', train=True, download=True, transform=transform)
-            val_dataset = datasets.MNIST('data', train=False, transform=transform)
+            # Load dataset based on configuration
+            dataset_class = getattr(datasets, dataset_config['name'])
+            train_dataset = dataset_class(
+                'data', 
+                train=True, 
+                download=True, 
+                transform=transform,
+                **dataset_config.get('args', {})
+            )
+            val_dataset = dataset_class(
+                'data', 
+                train=False, 
+                transform=transform,
+                **dataset_config.get('args', {})
+            )
             
-            train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-            val_loader = DataLoader(val_dataset, batch_size=1000)
+            train_loader = DataLoader(
+                train_dataset, 
+                batch_size=dataset_config.get('batch_size', 256), 
+                shuffle=True
+            )
+            val_loader = DataLoader(
+                val_dataset, 
+                batch_size=dataset_config.get('val_batch_size', 1000)
+            )
             
-            coordinator.train(train_loader, val_loader, epochs=epochs, learning_rate=learning_rate)
+            job_config['status'] = 'training'
+            job_config['coordinator'].train(
+                train_loader, 
+                val_loader, 
+                epochs=epochs, 
+                learning_rate=learning_rate
+            )
+            job_config['status'] = 'completed'
         
         thread = threading.Thread(target=train_thread)
         thread.start()
