@@ -40,13 +40,13 @@ const generateRandomData = () => {
 
       data.push({
         hour: `${i + 1}h`,
-        desktop: Math.round(currentValue),
+        performance: Math.round(currentValue),
         timestamp,
       });
     } else {
       data.push({
         hour: `${i + 1}h`,
-        desktop: null,
+        performance: null,
         timestamp,
       });
     }
@@ -57,8 +57,8 @@ const generateRandomData = () => {
 const chartData = generateRandomData();
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  performance: {
+    label: "Performance",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig;
@@ -84,14 +84,20 @@ export default function PerformanceChart() {
               const timestamp = payload[0].payload.timestamp;
               return formatTimestamp(timestamp);
             }}
-            content={<ChartTooltipContent indicator="dot" />}
+            content={
+              <ChartTooltipContent
+                decimalPlaces={2}
+                className="w-40"
+                indicator="dot"
+              />
+            }
           />
           <Line
-            dataKey="desktop"
+            dataKey="performance"
             type="linear"
-            fill="var(--color-desktop)"
+            fill="var(--color-performance)"
             fillOpacity={0.4}
-            stroke="var(--color-desktop)"
+            stroke="var(--color-performance)"
             isAnimationActive={false}
             dot={(props) => {
               const isLast = props.index === 7;
@@ -101,13 +107,13 @@ export default function PerformanceChart() {
                     cx={props.cx}
                     cy={props.cy}
                     r={4}
-                    fill="var(--color-desktop)"
+                    fill="var(--color-performance)"
                   />
                   <circle
                     cx={props.cx}
                     cy={props.cy}
                     r={8}
-                    fill="var(--color-desktop)"
+                    fill="var(--color-performance)"
                     filter="blur(8px)"
                     className="animate-pulse"
                   />

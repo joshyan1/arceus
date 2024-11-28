@@ -89,7 +89,13 @@ export default function LossChart() {
           <ChartTooltip
             cursor={true}
             animationDuration={100}
-            content={<ChartTooltipContent cursor className="w-48" hideLabel />}
+            content={
+              <ChartTooltipContent
+                decimalPlaces={3}
+                className="w-44"
+                hideLabel
+              />
+            }
           />
           <Line
             dataKey="validation"

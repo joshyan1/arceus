@@ -18,14 +18,14 @@ const devices = [
     usage: 0.7,
   },
   {
-    name: "SPACEX EMPLOYEE",
+    name: "PLAYSTATION 5",
     cpu: "M2",
     tflops: 2.9,
     task: "Layer 2",
     usage: 0.3,
   },
   {
-    name: "6 FOOT 3 JUNGKOOK",
+    name: "JY EATER",
     cpu: "M3",
     tflops: 3.2,
     task: "Layer 4",
