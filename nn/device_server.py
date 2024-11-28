@@ -141,10 +141,6 @@ class DeviceServer:
         while True:
             message = self.socket.recv_pyobj()
             command = message['command']
-
-            if command:
-                print("received command")
-            
             if command == 'init':
                 self.device = Device(
                     layer_configs=message['layer_configs'],
@@ -170,7 +166,7 @@ class DeviceServer:
                 self.device.update(message['learning_rate'])
                 self.socket.send_pyobj({'status': 'updated'})
 
-            elif command =="ping":
+            elif command == 'ping':
                 print("Received ping")
                 self.socket.send_pyobj({'status': 'connection successful'})
 
