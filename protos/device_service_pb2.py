@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bprotos/device_service.proto\x12\x06\x64\x65vice\"J\n\x0bLayerConfig\x12\x12\n\ninput_size\x18\x01 \x01(\x05\x12\x13\n\x0boutput_size\x18\x02 \x01(\x05\x12\x12\n\nactivation\x18\x03 \x01(\t\"L\n\x0bInitRequest\x12*\n\rlayer_configs\x18\x01 \x03(\x0b\x32\x13.device.LayerConfig\x12\x11\n\tdevice_id\x18\x02 \x01(\x05\"1\n\x0cInitResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x11\n\tdevice_id\x18\x02 \x01(\x05\"4\n\x0e\x46orwardRequest\x12\r\n\x05input\x18\x01 \x03(\x02\x12\x13\n\x0binput_shape\x18\x02 \x03(\x05\"7\n\x0f\x46orwardResponse\x12\x0e\n\x06output\x18\x01 \x03(\x02\x12\x14\n\x0coutput_shape\x18\x02 \x03(\x05\"9\n\x0f\x42\x61\x63kwardRequest\x12\x12\n\ngrad_input\x18\x01 \x03(\x02\x12\x12\n\ngrad_shape\x18\x02 \x03(\x05\";\n\x10\x42\x61\x63kwardResponse\x12\x13\n\x0bgrad_output\x18\x01 \x03(\x02\x12\x12\n\ngrad_shape\x18\x02 \x03(\x05\"&\n\rUpdateRequest\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\" \n\x0eUpdateResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"\r\n\x0bPingRequest\"\x1e\n\x0cPingResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xaf\x02\n\rDeviceService\x12\x37\n\nInitialize\x12\x13.device.InitRequest\x1a\x14.device.InitResponse\x12:\n\x07\x46orward\x12\x16.device.ForwardRequest\x1a\x17.device.ForwardResponse\x12=\n\x08\x42\x61\x63kward\x12\x17.device.BackwardRequest\x1a\x18.device.BackwardResponse\x12\x37\n\x06Update\x12\x15.device.UpdateRequest\x1a\x16.device.UpdateResponse\x12\x31\n\x04Ping\x12\x13.device.PingRequest\x1a\x14.device.PingResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bprotos/device_service.proto\x12\x06\x64\x65vice\"J\n\x0bLayerConfig\x12\x12\n\ninput_size\x18\x01 \x01(\x05\x12\x13\n\x0boutput_size\x18\x02 \x01(\x05\x12\x12\n\nactivation\x18\x03 \x01(\t\"L\n\x0bInitRequest\x12*\n\rlayer_configs\x18\x01 \x03(\x0b\x32\x13.device.LayerConfig\x12\x11\n\tdevice_id\x18\x02 \x01(\x05\"1\n\x0cInitResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x11\n\tdevice_id\x18\x02 \x01(\x05\"9\n\x0e\x46orwardRequest\x12\x12\n\ninput_data\x18\x01 \x01(\x0c\x12\x13\n\x0binput_shape\x18\x02 \x03(\x05\"<\n\x0f\x46orwardResponse\x12\x13\n\x0boutput_data\x18\x01 \x01(\x0c\x12\x14\n\x0coutput_shape\x18\x02 \x03(\x05\"8\n\x0f\x42\x61\x63kwardRequest\x12\x11\n\tgrad_data\x18\x01 \x01(\x0c\x12\x12\n\ngrad_shape\x18\x02 \x03(\x05\"@\n\x10\x42\x61\x63kwardResponse\x12\x18\n\x10grad_output_data\x18\x01 \x01(\x0c\x12\x12\n\ngrad_shape\x18\x02 \x03(\x05\"&\n\rUpdateRequest\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\" \n\x0eUpdateResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"\r\n\x0bPingRequest\"\x1e\n\x0cPingResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xaf\x02\n\rDeviceService\x12\x37\n\nInitialize\x12\x13.device.InitRequest\x1a\x14.device.InitResponse\x12:\n\x07\x46orward\x12\x16.device.ForwardRequest\x1a\x17.device.ForwardResponse\x12=\n\x08\x42\x61\x63kward\x12\x17.device.BackwardRequest\x1a\x18.device.BackwardResponse\x12\x37\n\x06Update\x12\x15.device.UpdateRequest\x1a\x16.device.UpdateResponse\x12\x31\n\x04Ping\x12\x13.device.PingRequest\x1a\x14.device.PingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,21 +38,21 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_INITRESPONSE']._serialized_start=193
   _globals['_INITRESPONSE']._serialized_end=242
   _globals['_FORWARDREQUEST']._serialized_start=244
-  _globals['_FORWARDREQUEST']._serialized_end=296
-  _globals['_FORWARDRESPONSE']._serialized_start=298
-  _globals['_FORWARDRESPONSE']._serialized_end=353
-  _globals['_BACKWARDREQUEST']._serialized_start=355
-  _globals['_BACKWARDREQUEST']._serialized_end=412
-  _globals['_BACKWARDRESPONSE']._serialized_start=414
-  _globals['_BACKWARDRESPONSE']._serialized_end=473
-  _globals['_UPDATEREQUEST']._serialized_start=475
-  _globals['_UPDATEREQUEST']._serialized_end=513
-  _globals['_UPDATERESPONSE']._serialized_start=515
-  _globals['_UPDATERESPONSE']._serialized_end=547
-  _globals['_PINGREQUEST']._serialized_start=549
-  _globals['_PINGREQUEST']._serialized_end=562
-  _globals['_PINGRESPONSE']._serialized_start=564
-  _globals['_PINGRESPONSE']._serialized_end=594
-  _globals['_DEVICESERVICE']._serialized_start=597
-  _globals['_DEVICESERVICE']._serialized_end=900
+  _globals['_FORWARDREQUEST']._serialized_end=301
+  _globals['_FORWARDRESPONSE']._serialized_start=303
+  _globals['_FORWARDRESPONSE']._serialized_end=363
+  _globals['_BACKWARDREQUEST']._serialized_start=365
+  _globals['_BACKWARDREQUEST']._serialized_end=421
+  _globals['_BACKWARDRESPONSE']._serialized_start=423
+  _globals['_BACKWARDRESPONSE']._serialized_end=487
+  _globals['_UPDATEREQUEST']._serialized_start=489
+  _globals['_UPDATEREQUEST']._serialized_end=527
+  _globals['_UPDATERESPONSE']._serialized_start=529
+  _globals['_UPDATERESPONSE']._serialized_end=561
+  _globals['_PINGREQUEST']._serialized_start=563
+  _globals['_PINGREQUEST']._serialized_end=576
+  _globals['_PINGRESPONSE']._serialized_start=578
+  _globals['_PINGRESPONSE']._serialized_end=608
+  _globals['_DEVICESERVICE']._serialized_start=611
+  _globals['_DEVICESERVICE']._serialized_end=914
 # @@protoc_insertion_point(module_scope)

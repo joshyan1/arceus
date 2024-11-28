@@ -40,24 +40,24 @@ message InitResponse {
 
 // Forward pass request/response
 message ForwardRequest {
-  repeated float input = 1;  // Flattened input array
-  repeated int32 input_shape = 2;  // Original shape of input
+  bytes input_data = 1;  // Serialized numpy array
+  repeated int32 input_shape = 2;
 }
 
 message ForwardResponse {
-  repeated float output = 1;  // Flattened output array
-  repeated int32 output_shape = 2;  // Shape of output
+  bytes output_data = 1;  // Serialized numpy array
+  repeated int32 output_shape = 2;
 }
 
 // Backward pass request/response
 message BackwardRequest {
-  repeated float grad_input = 1;  // Flattened gradient array
-  repeated int32 grad_shape = 2;  // Shape of gradient
+  bytes grad_data = 1;  // Serialized numpy array
+  repeated int32 grad_shape = 2;
 }
 
 message BackwardResponse {
-  repeated float grad_output = 1;  // Flattened gradient array
-  repeated int32 grad_shape = 2;  // Shape of gradient
+  bytes grad_output_data = 1;  // Serialized numpy array
+  repeated int32 grad_shape = 2;
 }
 
 // Parameter update request/response

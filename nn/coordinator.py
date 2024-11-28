@@ -109,7 +109,7 @@ class DistributedNeuralNetwork:
             # Time communication overhead
             start_comm = time.time()
             forward_request = pb2.ForwardRequest(
-                input=A.flatten().tolist(),
+                input_data=A.tobytes(),
                 input_shape=list(A.shape)
             )
             comm_time = time.time() - start_comm
@@ -120,7 +120,7 @@ class DistributedNeuralNetwork:
             forward_time = time.time() - start_forward
             
             start_comm = time.time()
-            A = np.array(response.output).reshape(response.output_shape)
+            A = np.frombuffer(response.output_data, dtype=np.float32).reshape(response.output_shape)
             activations.append(A)
             comm_time += time.time() - start_comm
             
@@ -149,7 +149,7 @@ class DistributedNeuralNetwork:
             
             start_comm = time.time()
             backward_request = pb2.BackwardRequest(
-                grad_input=dA.flatten().tolist(),
+                grad_data=dA.tobytes(),
                 grad_shape=list(dA.shape)
             )
             comm_time = time.time() - start_comm
@@ -159,7 +159,7 @@ class DistributedNeuralNetwork:
             backward_time = time.time() - start_backward
             
             start_comm = time.time()
-            dA = np.array(response.grad_output).reshape(response.grad_shape)
+            dA = np.frombuffer(response.grad_output_data, dtype=np.float32).reshape(response.grad_shape)
             comm_time += time.time() - start_comm
             
             total_backward_time += backward_time

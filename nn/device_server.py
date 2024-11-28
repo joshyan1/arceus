@@ -251,21 +251,21 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     
     def Forward(self, request, context):
         """Forward pass through device layers"""
-        input_array = np.array(request.input).reshape(request.input_shape)
+        input_array = np.frombuffer(request.input_data, dtype=np.float32).reshape(request.input_shape)
         output = self.device.forward(input_array)
         
         return pb2.ForwardResponse(
-            output=output.flatten().tolist(),
+            output_data=output.tobytes(),  # Serialize numpy array directly
             output_shape=list(output.shape)
         )
     
     def Backward(self, request, context):
         """Backward pass through device layers"""
-        grad_input = np.array(request.grad_input).reshape(request.grad_shape)
+        grad_input = np.frombuffer(request.grad_data, dtype=np.float32).reshape(request.grad_shape)
         grad_output = self.device.backward(grad_input)
         
         return pb2.BackwardResponse(
-            grad_output=grad_output.flatten().tolist(),
+            grad_output_data=grad_output.tobytes(),  # Serialize numpy array directly
             grad_shape=list(grad_output.shape)
         )
     
