@@ -251,6 +251,13 @@ class Device:
                 extra={'device_id': self.device_id}
             )
 
+    def get_teraflops(self):
+        """Return the teraflops data for this device."""
+        return {
+            'forward_tflops': np.mean(self.forward_teraflops) if self.forward_teraflops else 0,
+            'backward_tflops': np.mean(self.backward_teraflops) if self.backward_teraflops else 0
+        }
+
 class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     def __init__(self):
         self.device = None
@@ -267,6 +274,7 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
         ]
         
         self.device = Device(layer_configs, device_id=request.device_id)
+        print(f"Initialized device with ID: {self.device.device_id}")  # Log device ID
         
         return pb2.InitResponse(
             status='initialized',
@@ -301,6 +309,20 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     def Ping(self, request, context):
         """Health check"""
         return pb2.PingResponse(status='connection successful')
+    
+    def GetTeraflops(self, request, context):
+        """Get teraflops data for the device."""
+        if self.device is None:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details('Device not initialized')
+            return pb2.TeraflopsResponse()
+
+        teraflops_data = self.device.get_teraflops()
+        print(f"Device {self.device.device_id} - Forward TFLOPs: {teraflops_data['forward_tflops']}, Backward TFLOPs: {teraflops_data['backward_tflops']}")
+        return pb2.TeraflopsResponse(
+            forward_tflops=teraflops_data['forward_tflops'],
+            backward_tflops=teraflops_data['backward_tflops']
+        )
 
 def serve(port):
     """Start gRPC server"""

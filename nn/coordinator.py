@@ -256,6 +256,28 @@ class DistributedNeuralNetwork:
             print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")
             
             # Rest of the training code remains the same...
+        
+        # Aggregate teraflops data after training
+        self.aggregate_teraflops()
+
+    def aggregate_teraflops(self):
+        """Aggregate teraflops data from all devices."""
+        self.teraflops_data = {}
+        for device_id, stub in self.device_connections.items():
+            try:
+                request = pb2.TeraflopsRequest(device_id=device_id)
+                response = stub.GetTeraflops(request)
+                self.teraflops_data[device_id] = {
+                    'forward_tflops': response.forward_tflops,
+                    'backward_tflops': response.backward_tflops,
+                    'total_tflops': response.forward_tflops + response.backward_tflops
+                }
+                print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
+            except Exception as e:
+                print(f"Error retrieving teraflops for device {device_id}: {e}")
+
+        # Log the aggregated teraflops data
+        print(f"Aggregated teraflops data: {self.teraflops_data}")
 
     def compute_loss(self, y_true, y_pred):
         """Compute cross entropy loss using PyTorch"""

@@ -18,6 +18,9 @@ service DeviceService {
   
   // Health check/ping
   rpc Ping(PingRequest) returns (PingResponse);
+  
+  // Get teraflops data
+  rpc GetTeraflops(TeraflopsRequest) returns (TeraflopsResponse);
 }
 
 // Layer configuration
@@ -74,4 +77,14 @@ message PingRequest {}
 
 message PingResponse {
   string status = 1;
+}
+
+// Teraflops request/response
+message TeraflopsRequest {
+  int32 device_id = 1;
+}
+
+message TeraflopsResponse {
+  float forward_tflops = 1;
+  float backward_tflops = 2;
 } 
