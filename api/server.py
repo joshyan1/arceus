@@ -1,17 +1,18 @@
-from flask import Flask, request, jsonify
-import zmq
+from flask import Flask, request, jsonify, Blueprint
 from nn.coordinator import DistributedNeuralNetwork
 import threading
 import os
 
-app = Flask(__name__)
+# Create a blueprint for the API
+api_bp = Blueprint('api', __name__)
 
 # Global state
 coordinator = None
 lock = threading.Lock()
 registered_devices = {}
+rooms = {}  # In-memory room storage
 
-@app.route('/api/devices/register', methods=['POST'])
+@api_bp.route('/api/devices/register', methods=['POST'])
 def register_device():
     """Register a new device with its IP and port number"""
     data = request.get_json()
@@ -43,7 +44,7 @@ def register_device():
         else:
             return jsonify({'error': 'Failed to connect to device'}), 500
 
-@app.route('/api/devices', methods=['GET'])
+@api_bp.route('/api/devices', methods=['GET'])
 def get_devices():
     """Get list of registered devices"""
     return jsonify({
@@ -55,7 +56,7 @@ def get_devices():
         'connected_devices': len(registered_devices)
     })
 
-@app.route('/api/network/initialize', methods=['POST'])
+@api_bp.route('/api/network/initialize', methods=['POST'])
 def initialize_network():
     """Initialize the neural network across registered devices"""
     if not coordinator:
@@ -70,7 +71,7 @@ def initialize_network():
     except Exception as e:
         return jsonify({'error': f'Failed to initialize network: {str(e)}'}), 500
 
-@app.route('/api/network/train', methods=['POST'])
+@api_bp.route('/api/network/train', methods=['POST'])
 def start_training():
     """Start the training process"""
     if not coordinator:
@@ -112,26 +113,66 @@ def start_training():
     except Exception as e:
         return jsonify({'error': f'Failed to start training: {str(e)}'}), 500
 
-@app.route('/api/devices/<int:port>', methods=['DELETE'])
+@api_bp.route('/api/devices/<int:port>', methods=['DELETE'])
 def unregister_device(port):
     """Unregister a device"""
-    if port not in registered_devices:
+    device_address = next((addr for addr, id in registered_devices.items() if id == port), None)
+    if device_address is None:
         return jsonify({'error': 'Device not found'}), 404
         
     with lock:
-        del registered_devices[port]
+        del registered_devices[device_address]
         if len(registered_devices) == 0:
             global coordinator
             coordinator = None
             
         return jsonify({'message': 'Device unregistered successfully'})
 
+# Room Management Endpoints
+
+@api_bp.route('/api/rooms', methods=['GET'])
+def get_rooms():
+    """Get list of available training rooms"""
+    return jsonify({'rooms': list(rooms.keys())})
+
+@api_bp.route('/api/rooms/create', methods=['POST'])
+def create_room():
+    """Create a new training room"""
+    data = request.get_json()
+    room_name = data.get('room_name')
+    
+    if not room_name:
+        return jsonify({'error': 'Room name is required'}), 400
+    
+    if room_name in rooms:
+        return jsonify({'error': 'Room already exists'}), 409
+    
+    rooms[room_name] = []  # Initialize with an empty list of devices
+    return jsonify({'message': 'Room created successfully', 'room_name': room_name}), 201
+
+@api_bp.route('/api/rooms/join', methods=['POST'])
+def join_room():
+    """Join an existing training room"""
+    data = request.get_json()
+    room_name = data.get('room_name')
+    device_id = data.get('device_id')
+    
+    if room_name not in rooms:
+        return jsonify({'error': 'Room not found'}), 404
+    
+    rooms[room_name].append(device_id)  # Add device to the room
+    return jsonify({'message': 'Joined room successfully', 'room_name': room_name}), 200
+
 def create_app():
     """Create and configure the Flask app"""
+    app = Flask(__name__)
+    # Register the blueprint
+    app.register_blueprint(api_bp)
+    
     # Ensure the data directory exists
     os.makedirs('data', exist_ok=True)
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=4000)
+    app.run(host='0.0.0.0', port=4000, debug=True)
