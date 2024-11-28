@@ -64,7 +64,7 @@ function DeviceCard({ device }: { device: (typeof devices)[number] }) {
   return (
     <Card
       key={device.name}
-      className="flex flex-col gap-2 rounded-lg bg-muted/25 p-2 pr-3"
+      className="flex flex-col gap-2 rounded-lg bg-muted/20 p-2 pr-3"
     >
       <div className="flex items-center justify-between">
         <div className="font-supply text-sm">

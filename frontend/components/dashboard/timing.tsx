@@ -12,7 +12,7 @@ export default function Timing() {
           0.01s
         </div>
       </div>
-      <TimingChart />
+      {/* <TimingChart /> */}
     </Card>
   );
 }
