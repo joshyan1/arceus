@@ -17,7 +17,6 @@ python -m api.server
 - [Get Previous Training Data](#get-previous-training-data)
 
 
-
 ### Create Job
 Creates a new training job with specified model and dataset configurations
 ```

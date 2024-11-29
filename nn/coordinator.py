@@ -267,47 +267,52 @@ class DistributedNeuralNetwork:
                 batch_loss = self.compute_loss(target, y_pred)
                 batch_acc = self.compute_accuracy(target, y_pred)
                 
-                # Emit training update
-                training_update = {
-                    'epoch': self.current_epoch,
-                    'total_epochs': self.total_epochs,
-                    'batch': self.current_batch,
-                    'total_batches': self.total_batches,
-                    'loss': float(batch_loss),
-                    'accuracy': float(batch_acc),
-                    'learning_rate': learning_rate,
-                    'timing': {
-                        'forward': self.timing_stats['forward_time'][-1],
-                        'backward': self.timing_stats['backward_time'][-1] if self.timing_stats['backward_time'] else 0,
-                        'update': self.timing_stats['update_time'][-1] if self.timing_stats['update_time'] else 0,
-                        'communication': self.timing_stats['communication_time'][-1],
-                        'data_prep': self.timing_stats['data_prep_time'][-1]
+                if (batch_idx + 1) % 10 == 0:
+                    # Emit training update
+                    training_update = {
+                        'epoch': self.current_epoch,
+                        'total_epochs': self.total_epochs,
+                        'batch': self.current_batch,
+                        'total_batches': self.total_batches,
+                        'loss': float(batch_loss),
+                        'accuracy': float(batch_acc),
+                        'learning_rate': learning_rate,
+                        'timing': {
+                            'forward': self.timing_stats['forward_time'][-1],
+                            'backward': self.timing_stats['backward_time'][-1] if self.timing_stats['backward_time'] else 0,
+                            'update': self.timing_stats['update_time'][-1] if self.timing_stats['update_time'] else 0,
+                            'communication': self.timing_stats['communication_time'][-1],
+                            'data_prep': self.timing_stats['data_prep_time'][-1]
+                        }
                     }
-                }
-                training_namespace.emit_training_update(training_update)
-                
+
+                    training_namespace.emit_training_update(training_update)
+
+
                 # Backward pass and update
                 self.backward(activations, target)
                 self.update_parameters(learning_rate)
                 
                 # Collect teraflops data
-                self.aggregate_teraflops()
-                teraflops_data = {
-                    'epoch': self.current_epoch,
-                    'batch': self.current_batch,
-                    'devices': self.teraflops_data
-                }
-                training_namespace.emit_teraflops_update(teraflops_data)
+                if (batch_idx + 1) % 10 == 0:
+                    self.aggregate_teraflops()
+                    teraflops_data = {
+                        'epoch': self.current_epoch,
+                        'batch': self.current_batch,
+                        'devices': self.teraflops_data
+                    }
+                    training_namespace.emit_teraflops_update(teraflops_data)
                 
-                # Emit batch completion
-                batch_data = {
-                    'epoch': self.current_epoch,
-                    'batch': self.current_batch,
-                    'loss': float(batch_loss),
-                    'accuracy': float(batch_acc),
-                    'time': time.time() - batch_start
-                }
-                training_namespace.emit_batch_complete(batch_data)
+                if (batch_idx + 1) % 10 == 0:
+                    # Emit batch completion
+                    batch_data = {
+                        'epoch': self.current_epoch,
+                        'batch': self.current_batch,
+                        'loss': float(batch_loss),
+                        'accuracy': float(batch_acc),
+                        'time': time.time() - batch_start
+                    }
+                    training_namespace.emit_batch_complete(batch_data)
                 
                 epoch_loss += batch_loss
                 epoch_acc += batch_acc
