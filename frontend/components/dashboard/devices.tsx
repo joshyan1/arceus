@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { CircleGauge, Cpu, Laptop, Layers, Monitor, Zap } from "lucide-react";
 import { useAppContext } from "../providers/context";
 import { cn } from "@/lib/utils";
-import { you, devices, Device } from "@/lib/devices";
-
+import { you, devices } from "@/lib/devices";
+import { Device } from "@/lib/types";
 export default function Devices() {
   return (
     <Card className="relative z-0 flex flex-1 overflow-hidden">

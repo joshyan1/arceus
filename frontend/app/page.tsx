@@ -11,10 +11,14 @@ import Earnings from "@/components/dashboard/earnings";
 import { socket } from "@/lib/socket";
 import { useState } from "react";
 import { useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TimingData } from "@/lib/types";
 
 export default function Home() {
-  const [timingData, setTimingData] = useState<any[]>([]);
+  const [timingData, setTimingData] = useState<TimingData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [isTraining, setIsTraining] = useState(false);
 
   useEffect(() => {
     socket.connect();
@@ -24,29 +28,32 @@ export default function Home() {
     };
   }, []);
 
-  function startTraining() {
+  async function startTraining() {
     const jobId = "1";
-    fetch(`http://127.0.0.1:4000/api/network/train/${jobId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        epochs: 10,
-        learning_rate: 0.1,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.message === "Training started") {
-          console.log("Training started");
-        } else {
-          console.error("Training failed to start:", data.error);
-        }
-      })
-      .catch((error) => {
-        console.error("Error starting training:", error);
-      });
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:4000/api/network/train/${jobId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            epochs: 10,
+            learning_rate: 0.1,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (data.message === "Training started") {
+        console.log("Training started");
+        setIsTraining(true);
+      } else {
+        console.error("Training failed to start:", data.error);
+      }
+    } catch (error) {
+      console.error("Error starting training:", error);
+    }
   }
 
   useEffect(() => {
@@ -61,6 +68,7 @@ export default function Home() {
 
     function onTimingEvent(value: any) {
       setTimingData((prev) => [...prev, value]);
+      console.log(value);
     }
 
     socket.on("connect", onConnectEvent);
@@ -77,21 +85,36 @@ export default function Home() {
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
-      <div>{JSON.stringify(timingData)}</div>
-      <button onClick={startTraining}>Start Training</button>
-      <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
-        <div className="flex w-96 flex-col gap-4">
-          <Progress progress={75} />
-          <Earnings />
-          <Compute />
-          <Devices />
-        </div>
-        <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
-          <Loss />
-          <Timing />
-          <ModelVisualization />
-        </div>
-      </div>
+      <div>{timingData.length}</div>
+      {isTraining ? (
+        <>
+          <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
+            <div className="flex w-96 flex-col gap-4">
+              <Progress progress={75} />
+              <Earnings />
+              <Compute />
+              <Devices />
+            </div>
+            <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
+              <Loss />
+              <Timing timingData={timingData} />
+              <ModelVisualization />
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid w-full grow grid-cols-2 gap-4 overflow-hidden bg-muted/25 p-4">
+            <Card className="flex flex-col items-start gap-4 p-4">
+              <div>Training</div>
+              <Button variant="secondary" onClick={startTraining}>
+                Start Training
+              </Button>
+            </Card>
+            <Card className="flex flex-col items-start gap-4 p-4">Devices</Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }
