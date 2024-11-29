@@ -5,7 +5,7 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
 
-const dimensions = [40, 40, 40, 40, 40];
+const dimensions = [40, 40, 40, 40, 40, 40];
 const connections = generateConnections(dimensions);
 
 console.log(connections);
@@ -122,10 +122,19 @@ function Layer({
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const [lineContainerHeight, setLineContainerHeight] = useState(0);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!lineContainerRef.current) return;
+
     setLineContainerHeight(lineContainerRef.current.clientHeight);
-  }, [lineContainerRef.current]);
+
+    const observer = new ResizeObserver((entries) => {
+      const height = entries[0]?.contentRect.height;
+      if (height) setLineContainerHeight(height);
+    });
+
+    observer.observe(lineContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div
@@ -136,9 +145,14 @@ function Layer({
     >
       <div className="h-full py-4">
         <div
+          key={
+            animationIndex >= layer
+              ? "show-visualization"
+              : "hide-visualization"
+          }
           className={cn(
-            "relative h-full w-full justify-center",
-            animationIndex >= layer ? "flex" : "hidden",
+            "relative flex h-full w-full justify-center",
+            animationIndex >= layer ? "opacity-100" : "opacity-0",
           )}
           ref={lineContainerRef}
         >
@@ -155,6 +169,21 @@ function Layer({
               const lineLength = Math.sqrt(
                 (spacing + 40) ** 2 + verticalDistance ** 2,
               );
+
+              if (layer === 3) {
+                console.log({
+                  from,
+                  dimension,
+                  to,
+                  nextDimension: connections.nextDimension,
+                  top,
+                  verticalDistance,
+                  angle,
+                  lineLength,
+                  spacing,
+                  lineContainerHeight,
+                });
+              }
 
               return (
                 <Fragment key={index}>
