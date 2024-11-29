@@ -9,18 +9,23 @@ from protos import device_service_pb2 as pb2
 from protos import device_service_pb2_grpc as pb2_grpc
 from threading import Lock
 
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from api.socketio_instance import socketio
+
 
 # Global variable to store previous training sessions' teraflops data
 previous_training_sessions = []
 lock = Lock()
 
 class DistributedNeuralNetwork:
-    def __init__(self, layer_sizes, quantization_bits=8):
+    def __init__(self, layer_sizes, quantization_bits=8, job_id = None):
         self.layer_sizes = layer_sizes
         self.max_devices = len(layer_sizes) - 1
         self.device_connections = {}
         self.quantization_bits = quantization_bits
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        self.job_id = job_id
         self.timing_stats = {
             'forward_time': [],
             'backward_time': [],
@@ -214,12 +219,30 @@ class DistributedNeuralNetwork:
             print(f"Total overhead: {avg_comm + avg_prep:.4f}s")
             print("-" * 50)
 
-    def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
+            # Emit the timing stats via SocketIO
+            if self.job_id:
+                socketio.emit('timing_stats', {
+                    'avg_forward': avg_forward,
+                    'avg_backward': avg_backward,
+                    'avg_update': avg_update,
+                    'avg_comm': avg_comm,
+                    'avg_prep': avg_prep,
+                    'total_computation': avg_forward + avg_backward + avg_update,
+                    'total_overhead': avg_comm + avg_prep,
+                    'batch_idx': batch_idx
+                }, room=self.job_id)
+
+    def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1, job_id=None):
         print("\nStarting distributed training across devices...")
         print(f"Learning rate: {learning_rate}")
         print(f"Quantization bits: {self.quantization_bits}")
         print(f"Device: {self.device}")
         print("-" * 100)
+
+        if job_id:
+            self.job_id = job_id  # Store job_id for later use
+        else:
+            self.job_id = 'default_room'  # Fallback room name
         
         for epoch in range(epochs):
             epoch_start = time.time()
@@ -257,6 +280,17 @@ class DistributedNeuralNetwork:
                           f"Acc: {batch_acc:.4f} "
                           f"Time: {batch_time:.2f}s")
                     self.print_timing_stats(batch_idx + 1)
+                
+                # Emit training progress to the frontend
+                if self.job_id:
+                    socketio.emit('training_progress', {
+                        'epoch': epoch + 1,
+                        'batch': batch_idx + 1,
+                        'loss': batch_loss,
+                        'accuracy': batch_acc,
+                        'forward_time': self.timing_stats['forward_time'][-1] if self.timing_stats['forward_time'] else 0,
+                        'backward_time': self.timing_stats['backward_time'][-1] if self.timing_stats['backward_time'] else 0
+                    }, room=self.job_id)
             
             epoch_time = time.time() - epoch_start
             print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")

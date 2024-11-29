@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Existing head content -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        /* Add some basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #stats {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Training Dashboard</h1>
+    <button id="start-training">Start Training</button>
+    <div id="progress">
+        <h2>Timing Statistics</h2>
+        <p id="avg_forward">Average Forward Time: N/A</p>
+        <p id="avg_backward">Average Backward Time: N/A</p>
+        <p id="avg_update">Average Update Time: N/A</p>
+        <p id="avg_comm">Average Communication Time: N/A</p>
+        <p id="avg_prep">Average Preparation Time: N/A</p>
+        <p id="total_computation">Total Computation Time: N/A</p>
+        <p id="total_overhead">Total Overhead Time: N/A</p>
+    </div>
+
+    <script>
+        const jobId = '1';  // Replace with your actual job ID or obtain it dynamically
+
+        document.getElementById('start-training').addEventListener('click', () => {
+            // Disable the button to prevent multiple clicks
+            document.getElementById('start-training').disabled = true;
+
+            // Send the train request to the server
+            fetch(`http://127.0.0.1:4000/api/network/train/${jobId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'epochs': 10,
+                    'learning_rate': 0.1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Training started') {
+                    // Establish the socket connection
+                    const socket = io('http://127.0.0.1:4000');
+
+                    // Listen for connection
+                    socket.on('connect', () => {
+                        console.log('Connected to WebSocket');
+                        // Join the room
+                        socket.emit('join', { room: jobId });
+                    });
+
+                    socket.on('timing_stats', (data) => {
+                        console.log(data);
+                        // Update the UI with timing statistics from the coordinator
+                        const progressDiv = document.getElementById('progress');
+                        progressDiv.innerHTML += `
+                            <div class="entry">
+                                <h3>Batch ${data.batch_idx}</h3>
+                                <p>
+                                    <strong>Forward Pass:</strong> ${data.avg_forward.toFixed(4)}s<br>
+                                    <strong>Backward Pass:</strong> ${data.avg_backward.toFixed(4)}s<br>
+                                    <strong>Parameter Update:</strong> ${data.avg_update.toFixed(4)}s<br>
+                                    <strong>Communication Overhead:</strong> ${data.avg_comm.toFixed(4)}s<br>
+                                    <strong>Data Preparation:</strong> ${data.avg_prep.toFixed(4)}s<br>
+                                    <strong>Total Computation:</strong> ${data.total_computation.toFixed(4)}s<br>
+                                    <strong>Total Overhead:</strong> ${data.total_overhead.toFixed(4)}s
+                                </p>
+                            </div>
+                        `;
+                    });
+
+                    // Optional: Handle connection errors
+                    socket.on('connect_error', (err) => {
+                        console.error('Connection error:', err);
+                    });
+
+                    // Handle disconnection
+                    socket.on('disconnect', () => {
+                        console.log('Disconnected from WebSocket');
+                    });
+                } else {
+                    console.error('Training failed to start:', data.error);
+                    // Re-enable the button if training failed
+                    document.getElementById('start-training').disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error starting training:', error);
+                // Re-enable the button in case of error
+                document.getElementById('start-training').disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
