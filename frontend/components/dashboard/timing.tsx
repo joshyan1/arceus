@@ -9,10 +9,10 @@ export default function Timing() {
         <div>TIMING</div>
         <div className="flex items-center gap-2">
           <GaugeCircle className="size-3.5" />
-          0.01s
+          17ms
         </div>
       </div>
-      {/* <TimingChart /> */}
+      <TimingChart />
     </Card>
   );
 }

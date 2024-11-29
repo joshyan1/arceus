@@ -12,27 +12,27 @@ import {
 const generateTimingData = () => {
   const data = [];
   const baseValues = {
-    forward: 0.0027,
-    backward: 0.0031,
-    params: 0.0011,
-    comm: 0.0012,
-    prep: 0.0002,
+    forward: 2.763,
+    backward: 3.162,
+    params: 1.183,
+    comm: 1.236,
+    prep: 0.299,
   };
 
   // Generate 9 epochs worth of data (45 points)
   for (let epoch = 0; epoch < 10; epoch++) {
     for (let step = 0; step < 5; step++) {
-      if (epoch < 9) {
+      if (epoch < 10) {
         // Add some random variation (±15%)
         const variation = () => 1 + (Math.random() * 0.3 - 0.15);
 
         data.push({
           step: `${epoch}.${step}`,
-          prep: Number((baseValues.prep * variation()).toFixed(4)),
-          comm: Number((baseValues.comm * variation()).toFixed(4)),
-          params: Number((baseValues.params * variation()).toFixed(4)),
-          backward: Number((baseValues.backward * variation()).toFixed(4)),
-          forward: Number((baseValues.forward * variation()).toFixed(4)),
+          prep: Number((baseValues.prep * variation()).toFixed(3)),
+          comm: Number((baseValues.comm * variation()).toFixed(3)),
+          params: Number((baseValues.params * variation()).toFixed(3)),
+          backward: Number((baseValues.backward * variation()).toFixed(3)),
+          forward: Number((baseValues.forward * variation()).toFixed(3)),
         });
       } else {
         // Empty space for last epoch
@@ -55,23 +55,23 @@ const chartData = generateTimingData();
 const chartConfig = {
   forward: {
     label: "Forward Pass",
-    color: "hsl(142, 76%, 36%)", // Green
+    color: "hsl(20.5 90.2% 78.2%)",
   },
   backward: {
     label: "Backward Pass",
-    color: "hsl(200, 95%, 14%)", // Dark blue
+    color: "hsl(20.5 90.2% 68.2%)",
   },
   params: {
     label: "Parameter Update",
-    color: "hsl(271, 91%, 65%)", // Purple
+    color: "hsl(20.5 90.2% 48.2%)",
   },
   comm: {
     label: "Communication",
-    color: "hsl(349, 89%, 60%)", // Red
+    color: "hsl(20.5 90.2% 38.2%)",
   },
   prep: {
     label: "Data Preparation",
-    color: "hsl(32, 95%, 44%)", // Orange
+    color: "hsl(20.5 90.2% 18.2%)",
   },
 } satisfies ChartConfig;
 
@@ -106,7 +106,8 @@ export default function TimingChart() {
               <ChartTooltipContent
                 hideLabel
                 className="w-52"
-                decimalPlaces={4}
+                decimalPlaces={3}
+                suffix="ms"
               />
             }
           />

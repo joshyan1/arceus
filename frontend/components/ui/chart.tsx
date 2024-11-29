@@ -118,6 +118,7 @@ const ChartTooltipContent = React.forwardRef<
       nameKey?: string;
       labelKey?: string;
       decimalPlaces?: number;
+      suffix?: string;
     }
 >(
   (
@@ -136,6 +137,7 @@ const ChartTooltipContent = React.forwardRef<
       nameKey,
       labelKey,
       decimalPlaces = 0,
+      suffix,
     },
     ref,
   ) => {
@@ -175,6 +177,7 @@ const ChartTooltipContent = React.forwardRef<
       labelClassName,
       config,
       labelKey,
+      suffix,
     ]);
 
     if (!active || !payload?.length) {
@@ -251,6 +254,7 @@ const ChartTooltipContent = React.forwardRef<
                           {typeof item.value === "number"
                             ? Number(item.value).toFixed(decimalPlaces)
                             : item.value}
+                          {suffix}
                         </span>
                       )}
                     </div>
