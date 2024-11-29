@@ -198,7 +198,7 @@ class DistributedNeuralNetwork:
             stub.Update(pb2.UpdateRequest(learning_rate=learning_rate))
         self.timing_stats['update_time'].append(time.time() - start_update)
     
-    def print_timing_stats(self, batch_idx):
+    def print_timing_stats(self, batch_idx, batch_loss, batch_acc, batch_time, epoch):
         """Print timing statistics"""
         if batch_idx % 10 == 0:  # Print every 10 batches
             avg_forward = np.mean(self.timing_stats['forward_time'][-10:]) if self.timing_stats['forward_time'] else 0
@@ -260,6 +260,7 @@ class DistributedNeuralNetwork:
             # Print aggregated averages
             # print(f"\nAggregated Forward TFLOPs Average: {avg_forward_tflop}")
             # print(f"Aggregated Backward TFLOPs Average: {avg_backward_tflop}")
+            devices = [k for k in self.device_connections.keys()]
 
             # Instead of emitting directly, put the message in the queue
             if self.message_queue:
@@ -275,6 +276,11 @@ class DistributedNeuralNetwork:
                         'total_overhead': avg_comm + avg_prep,
                         'avg_forward_tflops': avg_forward_tflop,
                         'avg_backward_tflop': avg_backward_tflop,
+                        'batch_loss': batch_loss,
+                        'batch_time': batch_time,
+                        'batch_acc': batch_acc,
+                        'epoch': epoch,
+                        'devices': devices,
                         'batch_idx': batch_idx
                     },
                     'room': self.job_id
@@ -323,7 +329,7 @@ class DistributedNeuralNetwork:
                           f"Loss: {batch_loss:.4f} "
                           f"Acc: {batch_acc:.4f} "
                           f"Time: {batch_time:.2f}s")
-                    self.print_timing_stats(batch_idx + 1)
+                    self.print_timing_stats(batch_idx + 1, batch_loss, batch_acc, batch_time, epoch+1)
             
             epoch_time = time.time() - epoch_start
             print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")
