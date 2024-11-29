@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function Nav() {
+export default function Nav({ isConnected }: { isConnected: boolean }) {
   return (
     <nav className="relative flex h-14 w-full shrink-0 select-none items-center justify-between border-b px-4">
       <div className="flex items-center gap-2 text-lg">
@@ -24,10 +24,17 @@ export default function Nav() {
         <div className="translate-y-px">Some Model</div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* <div className="flex font-supply text-xs">
-          <div>CPU</div>
-        </div> */}
+      <div className="flex items-center gap-1">
+        <div className="relative flex size-5 items-center justify-center p-1">
+          {isConnected ? (
+            <>
+              <div className="absolute size-2 animate-ping rounded-full bg-green-500 opacity-75" />
+              <div className="size-2 rounded-full bg-green-500" />
+            </>
+          ) : (
+            <div className="size-2 rounded-full bg-red-500" />
+          )}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
