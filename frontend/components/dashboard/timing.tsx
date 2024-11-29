@@ -1,4 +1,4 @@
-import { GaugeCircle, Layers } from "lucide-react";
+import { Activity, Layers } from "lucide-react";
 import { Card } from "../ui/card";
 import TimingChart from "./timing-chart";
 import { TimingData } from "@/lib/types";
@@ -11,7 +11,7 @@ export default function Timing({ timingData }: { timingData: TimingData[] }) {
       <div className="mb-4 flex justify-between font-supply text-sm text-muted-foreground">
         <div>TIMING</div>
         <div className="flex items-center gap-2">
-          <GaugeCircle className="size-3.5" />
+          <Activity className="size-3.5" />
           BATCH {lastBatch}
         </div>
       </div>
