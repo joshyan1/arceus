@@ -66,6 +66,18 @@ class Layer:
             self.W -= learning_rate * self.dW
             self.b -= learning_rate * self.db
 
+    def calculate_flops(self, A_prev):
+        """Calculate FLOPs for the forward pass"""
+        # Assuming a fully connected layer
+        flops = 2 * A_prev.size(0) * self.W.size(0)  # 2 * (input_size * output_size)
+        return flops
+
+    def calculate_backward_flops(self):
+        """Calculate FLOPs for the backward pass"""
+        # Assuming a fully connected layer
+        flops = 2 * self.W.size(0) * self.W.size(1)  # 2 * (output_size * input_size)
+        return flops
+
 class Device:
     def __init__(self, layer_configs, device_id=0):
         self.device_id = device_id
@@ -94,6 +106,9 @@ class Device:
                 activation=config['activation']
             )
             self.layers.append(layer)
+        
+        self.forward_teraflops = []  # List to store forward teraflops
+        self.backward_teraflops = []  # List to store backward teraflops
     
     def quantize(self, x, bits=8):
         """Quantize gradients to reduce communication overhead"""
@@ -135,18 +150,20 @@ class Device:
         
         # Forward through each layer
         start_compute = time.time()
+        total_flops = 0  # Initialize FLOPs counter
         for i, layer in enumerate(self.layers):
             layer_start = time.time()
             A = layer.forward(A)
+            total_flops += layer.calculate_flops(A_prev)  # Add FLOPs for this layer
             self.activations.append(A)
             layer_time = time.time() - layer_start
-            """ self.logger.info(
-                f"Layer {i} forward: {self.activations[-2].shape} -> {A.shape} ({layer_time:.4f}s)",
-                extra={'device_id': self.device_id}
-            ) """
         
         compute_time = time.time() - start_compute
         self.timing_stats['forward_compute'].append(compute_time)
+
+        # Calculate and log teraflops
+        teraflops = total_flops / compute_time / 1e12  # Convert to TFLOPs
+        self.forward_teraflops.append(teraflops)  # Store teraflops
         
         """ self.logger.info(
             f"Forward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
@@ -171,18 +188,20 @@ class Device:
         
         # Backward through each layer in reverse
         start_compute = time.time()
+        total_flops = 0  # Initialize FLOPs counter
         for i in reversed(range(len(self.layers))):
             layer_start = time.time()
             layer = self.layers[i]
             dA = layer.backward(dA)
+            total_flops += layer.calculate_backward_flops()  # Add FLOPs for this layer
             layer_time = time.time() - layer_start
-            """ self.logger.info(
-                f"Layer {i} backward complete ({layer_time:.4f}s)",
-                extra={'device_id': self.device_id}
-            ) """
         
         compute_time = time.time() - start_compute
         self.timing_stats['backward_compute'].append(compute_time)
+
+        # Calculate and log teraflops
+        teraflops = total_flops / compute_time / 1e12  # Convert to TFLOPs
+        self.backward_teraflops.append(teraflops)  # Store teraflops
         
         """ self.logger.info(
             f"Backward pass complete - Compute: {compute_time:.4f}s, Transfer: {transfer_time:.4f}s",
@@ -218,14 +237,26 @@ class Device:
             avg_transfer = np.mean(self.timing_stats['data_transfer'][-10:])
             avg_update = np.mean(self.timing_stats['parameter_updates'][-10:])
             
+            avg_forward_tflops = np.mean(self.forward_teraflops[-10:]) if self.forward_teraflops else 0
+            avg_backward_tflops = np.mean(self.backward_teraflops[-10:]) if self.backward_teraflops else 0
+            
             self.logger.info(
                 f"Performance stats (last 10 operations):\n"
                 f"  Forward compute: {avg_forward:.4f}s\n"
                 f"  Backward compute: {avg_backward:.4f}s\n"
                 f"  Data transfer: {avg_transfer:.4f}s\n"
-                f"  Parameter updates: {avg_update:.4f}s",
+                f"  Parameter updates: {avg_update:.4f}s\n"
+                f"  Average Forward TFLOPs: {avg_forward_tflops:.4f}\n"
+                f"  Average Backward TFLOPs: {avg_backward_tflops:.4f}",
                 extra={'device_id': self.device_id}
             )
+
+    def get_teraflops(self):
+        """Return the teraflops data for this device."""
+        return {
+            'forward_tflops': np.mean(self.forward_teraflops) if self.forward_teraflops else 0,
+            'backward_tflops': np.mean(self.backward_teraflops) if self.backward_teraflops else 0
+        }
 
 class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     def __init__(self):
@@ -243,6 +274,7 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
         ]
         
         self.device = Device(layer_configs, device_id=request.device_id)
+        print(f"Initialized device with ID: {self.device.device_id}")  # Log device ID
         
         return pb2.InitResponse(
             status='initialized',
@@ -277,6 +309,20 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
     def Ping(self, request, context):
         """Health check"""
         return pb2.PingResponse(status='connection successful')
+    
+    def GetTeraflops(self, request, context):
+        """Get teraflops data for the device."""
+        if self.device is None:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details('Device not initialized')
+            return pb2.TeraflopsResponse()
+
+        teraflops_data = self.device.get_teraflops()
+        print(f"Device {self.device.device_id} - Forward TFLOPs: {teraflops_data['forward_tflops']}, Backward TFLOPs: {teraflops_data['backward_tflops']}")
+        return pb2.TeraflopsResponse(
+            forward_tflops=teraflops_data['forward_tflops'],
+            backward_tflops=teraflops_data['backward_tflops']
+        )
 
 def serve(port):
     """Start gRPC server"""

@@ -14,6 +14,8 @@ python -m api.server
 - [Initialize Network](#initialize-neural-network)
 - [Start Trainig](#train-neural-network)
 - [Unregister Device](#unregister-device)
+- [Get Previous Training Data](#get-previous-training-data)
+
 
 
 ### Create Job
@@ -208,3 +210,52 @@ Common HTTP status codes:
 - 409: Conflict (device already registered)
 - 500: Internal Server Error
 
+
+### Get Previous Training Data
+Retrieves teraflops data from all previous training sessions.
+```
+GET /api/previous_teraflops
+```
+
+Example:
+```shell
+curl http://localhost:4000/api/previous_teraflops
+```
+
+Response:
+```json
+[
+    {
+        "1": {
+            "forward_tflops": 0.0015331204049289227,
+            "backward_tflops": 0.00031180179212242365,
+            "total_tflops": 0.0018449221970513463
+        },
+        "2": {
+            "forward_tflops": 0.00015127388178370893,
+            "backward_tflops": 4.583333065966144e-06,
+            "total_tflops": 0.00015585721484967507
+        }
+    },
+    {
+        "1": {
+            "forward_tflops": 0.0015429136110469699,
+            "backward_tflops": 0.00031575592583976686,
+            "total_tflops": 0.0018586695368867368
+        },
+        "2": {
+            "forward_tflops": 0.0001522687525721267,
+            "backward_tflops": 4.6830205064907204e-06,
+            "total_tflops": 0.0001569517730786174
+        }
+    }
+]
+```
+
+Error Responses:
+All endpoints may return error responses in the following format:
+```json
+{
+    "error": "No previous training sessions found"
+}
+```
