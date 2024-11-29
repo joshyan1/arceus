@@ -26,15 +26,17 @@ export default function ModelVisualization() {
   return (
     <Card
       ref={containerRef}
-      className="relative col-span-2 flex items-center justify-evenly font-supply"
+      className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
       style={{ minHeight: "200px" }}
     >
-      <div
-        style={{
-          left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
-        }}
-        className="dotted-pattern absolute z-20 h-full w-full bg-primary"
-      ></div>
+      <div className="absolute -z-10 h-full w-[200%] overflow-visible">
+        <div
+          style={{
+            left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
+          }}
+          className="dotted-pattern absolute h-full w-full bg-primary"
+        ></div>
+      </div>
 
       {layerSpacing > 0 &&
         dimensions.map((dimension, i) => (
@@ -76,7 +78,7 @@ function Layer({
   }, [lineContainerRef.current]);
 
   return (
-    <div className="flex h-5/6 w-10 flex-col justify-between rounded-lg border bg-muted/20 shadow-lg shadow-muted/50">
+    <div className="bg-nested-card flex h-5/6 w-10 flex-col justify-between rounded-lg border shadow-lg shadow-muted/50">
       <div className="h-full py-4">
         <div
           className="relative flex h-full w-full justify-center"

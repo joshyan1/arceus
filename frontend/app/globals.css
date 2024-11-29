@@ -22,6 +22,7 @@ body {
     --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
     --card: 0 0% 100%;
+    --nested-card: 0 0% 100%;
     --card-foreground: 20 14.3% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 14.3% 4.1%;
@@ -50,6 +51,7 @@ body {
     --background: 20 14.3% 4.1%;
     --foreground: 60 9.1% 97.8%;
     --card: 20 14.3% 4.1%;
+    --nested-card: 12, 15.2%, 6.47%;
     --card-foreground: 60 9.1% 97.8%;
     --popover: 20 14.3% 4.1%;
     --popover-foreground: 60 9.1% 97.8%;
@@ -111,8 +113,8 @@ body {
     -webkit-mask-size: 2% 2%;
   }
   100% {
-    mask-size: 200% 200%;
-    -webkit-mask-size: 200% 200%;
+    mask-size: 1700% 1700%;
+    -webkit-mask-size: 1700% 1700%;
   }
 }
 
