@@ -42,7 +42,7 @@ export default function Devices() {
           <div>DEVICES</div>
           <div className="flex items-center gap-2">
             <Laptop className="size-3.5" />
-            {devices.length}
+            {devices.length + 1}
           </div>
         </div>
         <div className="flex flex-col gap-2">
@@ -65,14 +65,14 @@ function DeviceCard({ device }: { device: (typeof devices)[number] }) {
   return (
     <Card
       key={device.name}
-      className="bg-nested-card flex select-none flex-col rounded-lg p-2 pr-3 font-supply text-sm"
+      className="flex select-none flex-col rounded-lg bg-nested-card p-2 pr-3 font-supply text-sm"
       onMouseEnter={() => setHoveredLayers(device.task)}
       onMouseLeave={() => setHoveredLayers([])}
     >
       <div className="flex w-full items-center gap-2">
         <div>{device.name}</div>
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Cpu className="size-3.5 text-primary" />
+          <Cpu className="size-3.5" />
           {device.cpu}
         </div>
       </div>

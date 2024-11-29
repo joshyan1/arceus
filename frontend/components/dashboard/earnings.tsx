@@ -2,23 +2,22 @@
 
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Clock } from "lucide-react";
+import { CircleDollarSign, Clock } from "lucide-react";
 
-export default function Progress({ progress }: { progress: number }) {
+export default function Earnings() {
   return (
     <Card className="flex flex-col p-4">
       <div className="mb-4 flex justify-between font-supply text-sm text-muted-foreground">
-        <div>PROGRESS</div>
+        <div>EARNINGS</div>
         <div className="flex items-center gap-2">
-          <Clock className="size-3.5" />
-          2:15:32
+          <CircleDollarSign className="size-3.5" />
+          SOMETHING
         </div>
       </div>
-      <div className="mb-2 flex items-end justify-between">
-        <div className="text-4xl font-medium">75%</div>
-        <div className="text-lg text-muted-foreground">75/100 Epochs</div>
+      <div className="flex items-end justify-between">
+        <div className="text-4xl font-medium">$9.50</div>
+        <div className="text-lg text-muted-foreground">$4.206/Hour</div>
       </div>
-      <ProgressBar progress={progress} />
     </Card>
   );
 }

@@ -5,8 +5,10 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
 
-const dimensions = [40, 40, 40];
+const dimensions = [40, 40, 40, 40, 40];
 const connections = generateConnections(dimensions);
+
+console.log(connections);
 
 export default function ModelVisualization() {
   const containerRef = useRef<HTMLDivElement>(null);

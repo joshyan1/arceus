@@ -5,6 +5,7 @@ import Compute from "@/components/dashboard/compute";
 import Loss from "@/components/dashboard/loss";
 import Timing from "@/components/dashboard/timing";
 import ModelVisualization from "@/components/dashboard/model-visualization";
+import Earnings from "@/components/dashboard/earnings";
 
 export default function Home() {
   return (
@@ -12,8 +13,9 @@ export default function Home() {
       <Nav />
       <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
         <div className="flex w-96 flex-col gap-4">
-          <Compute />
           <Progress progress={75} />
+          <Earnings />
+          <Compute />
           <Devices />
         </div>
         <div className="grid grow grid-cols-2 grid-rows-2 gap-4">

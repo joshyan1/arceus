@@ -89,6 +89,20 @@ body {
   }
 }
 
+.dot-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}
+
 @keyframes line-pulse {
   0% {
     background-position: 100% 0%;
@@ -253,4 +267,24 @@ body {
   );
   background-position: 100% 0%;
   background-size: 200% 100%;
+}
+
+.gradient-button-bg {
+  background: radial-gradient(circle at top, #d6d3d1 0%, #292524 50%);
+}
+
+.gradient-button {
+  /* background: radial-gradient(
+    circle at bottom,
+    #262626 -10%,
+    hsl(0 0% 3.9%) 50%
+  );
+}
+
+.gradient-button-bg > div:hover { */
+  background: radial-gradient(
+    circle at bottom,
+    #292524 -10%,
+    hsl(var(--background)) 70%
+  );
 }
