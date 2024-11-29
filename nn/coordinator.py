@@ -329,7 +329,7 @@ class DistributedNeuralNetwork:
                             'data': {
                                 'epoch': epoch + 1,
                                 'epochs': epochs,
-                                'train_loss': float(epoch_loss),
+                                'train_loss': float(batch_loss),
                                 'train_acc': float(batch_acc), 
                                 'batch_idx': batch_idx + 1,
                                 'batch_time': batch_time
