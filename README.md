@@ -64,3 +64,9 @@ Learning rate: 0.1
 Quantization bits: 8
 Device: mps
 ```
+
+If that didn't work and you got an SSL Certificate error, run this then try again
+```
+cd /Applications/Python\ 3.11/
+./Install\ Certificates.command
+```
