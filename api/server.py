@@ -240,8 +240,8 @@ def get_device_teraflops():
     teraflops_data = coordinator.get_device_teraflops()
     
     # Print the teraflops data for each device
-    for device_id, tflops in teraflops_data.items():
-        print(f"Device {device_id} - Forward TFLOPs: {tflops['forward_tflops']:.4f}, Backward TFLOPs: {tflops['backward_tflops']:.4f}")
+    #for device_id, tflops in teraflops_data.items():
+    #    print(f"Device {device_id} - Forward TFLOPs: {tflops['forward_tflops']:.4f}, Backward TFLOPs: {tflops['backward_tflops']:.4f}")
 
     return jsonify(teraflops_data), 200
 
