@@ -20,3 +20,12 @@ export type TimingData = {
   total_computation: number;
   total_overhead: number;
 };
+
+export type EpochStats = {
+  epoch: number;
+  epochs: number;
+  train_loss: number;
+  train_acc: number;
+  val_loss: number;
+  val_acc: number;
+};
