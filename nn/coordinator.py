@@ -342,7 +342,7 @@ class DistributedNeuralNetwork:
                     'backward_tflops': response.backward_tflops,
                     'total_tflops': response.forward_tflops + response.backward_tflops
                 }
-                print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
+                # print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
             except Exception as e:
                 print(f"Error retrieving teraflops for device {device_id}: {e}")
 

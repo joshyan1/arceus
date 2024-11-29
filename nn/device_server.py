@@ -318,7 +318,7 @@ class DeviceServicer(pb2_grpc.DeviceServiceServicer):
             return pb2.TeraflopsResponse()
 
         teraflops_data = self.device.get_teraflops()
-        print(f"Device {self.device.device_id} - Forward TFLOPs: {teraflops_data['forward_tflops']}, Backward TFLOPs: {teraflops_data['backward_tflops']}")
+        # print(f"Device {self.device.device_id} - Forward TFLOPs: {teraflops_data['forward_tflops']}, Backward TFLOPs: {teraflops_data['backward_tflops']}")
         return pb2.TeraflopsResponse(
             forward_tflops=teraflops_data['forward_tflops'],
             backward_tflops=teraflops_data['backward_tflops']
