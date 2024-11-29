@@ -6,7 +6,7 @@ import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
 import { devices, you } from "@/lib/devices";
 
-const dimensions = [40, 40, 40, 40, 40, 40];
+const dimensions = [50, 50, 50, 50];
 const connections = generateConnections(dimensions);
 
 export default function ModelVisualization() {

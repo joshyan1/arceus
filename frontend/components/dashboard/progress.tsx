@@ -22,8 +22,10 @@ export default function Progress({
   const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
 
-  const batchProgress = ((batch / batchSize) * 100) / total;
-  const progressPercentage = (progress / total) * 100 + batchProgress;
+  const progressPercentage = Math.min(
+    ((progress * batchSize + batch) / (total * batchSize)) * 100,
+    100,
+  );
 
   return (
     <Card className="flex flex-col p-4">
@@ -54,7 +56,7 @@ export function ProgressBar({
   progress: number;
   total: number;
 }) {
-  const scaledProgress = Math.floor((progress / total) * 50);
+  const scaledProgress = Math.min(Math.floor((progress / total) * 50), 50);
 
   return (
     <div className="relative z-0 flex h-6 w-full justify-between">
@@ -69,7 +71,7 @@ export function ProgressBar({
             `h-full w-0.5 rounded-full`,
             i < scaledProgress - 1
               ? "bg-foreground"
-              : i === scaledProgress - 1
+              : i === scaledProgress - 1 || (progress >= 100 && i === 49)
                 ? "animate-pulse bg-primary"
                 : "bg-muted",
           )}
