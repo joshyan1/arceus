@@ -8,43 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-
-const generateRandomData = () => {
-  const data = [];
-  let trainLoss = 2.5;
-  let valLoss = 2.8;
-
-  // Generate 9 epochs worth of data (45 points)
-  for (let epoch = 0; epoch < 10; epoch++) {
-    for (let step = 0; step < 5; step++) {
-      if (epoch < 9) {
-        // Gradually decrease losses with some noise
-        trainLoss = Math.max(
-          0.2,
-          trainLoss * 0.95 + (Math.random() * 0.2 - 0.1),
-        );
-        // Validation loss follows training loss but is slightly higher
-        valLoss = Math.max(0.3, trainLoss + 0.2 + (Math.random() * 0.3 - 0.15));
-
-        data.push({
-          step: `${epoch}.${step}`,
-          training: Number(trainLoss.toFixed(3)),
-          validation: Number(valLoss.toFixed(3)),
-        });
-      } else {
-        // Push null for the last 1 epochs to create empty space
-        data.push({
-          step: `${epoch}.${step}`,
-          training: null,
-          validation: null,
-        });
-      }
-    }
-  }
-  return data;
-};
-
-const chartData = generateRandomData();
+import { EpochStats, TrainingData } from "@/lib/types";
 
 const chartConfig = {
   training: {
@@ -57,7 +21,16 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function LossChart() {
+export default function LossChart({
+  epochStats,
+  trainingData,
+}: {
+  epochStats: EpochStats[];
+  trainingData: TrainingData[];
+}) {
+  const recentEpochStats = epochStats.slice(-100);
+  const recentTrainingData = trainingData.slice(-1000);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(200);
 
@@ -72,6 +45,17 @@ export default function LossChart() {
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
+
+  const chartData = recentTrainingData.map((train) => {
+    const matchingEpoch = recentEpochStats.find(
+      (e) => e.epoch === Math.floor(train.epoch),
+    );
+    return {
+      step: train.epoch.toFixed(2),
+      training: train.train_loss,
+      validation: matchingEpoch?.val_loss ?? null,
+    };
+  });
 
   return (
     <div ref={containerRef} className="h-full">
@@ -115,7 +99,7 @@ export default function LossChart() {
             stroke="hsl(var(--muted-foreground))"
             strokeWidth={1.5}
             dot={(props) => {
-              const isLast = props.index === 44; // Last point of actual data (9 epochs * 5 points - 1)
+              const isLast = props.index === chartData.length - 1;
               return isLast ? (
                 <>
                   <circle
@@ -147,7 +131,7 @@ export default function LossChart() {
             stroke="hsl(var(--primary))"
             strokeWidth={1.5}
             dot={(props) => {
-              const isLast = props.index === 44;
+              const isLast = props.index === chartData.length - 1;
               return isLast ? (
                 <>
                   <circle

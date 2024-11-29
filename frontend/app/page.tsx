@@ -13,11 +13,12 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { EpochStats, TimingData } from "@/lib/types";
+import { EpochStats, TimingData, TrainingData } from "@/lib/types";
 
 export default function Home() {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
   const [epochStats, setEpochStats] = useState<EpochStats[]>([]);
+  const [trainingData, setTrainingData] = useState<TrainingData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isTraining, setIsTraining] = useState(false);
   const [startTime, setStartTime] = useState(0);
@@ -72,37 +73,60 @@ export default function Home() {
     function onTimingEvent(value: any) {
       setTimingData((prev) => [...prev, value]);
       console.log(value);
+      if (!isTraining) {
+        setIsTraining(true);
+      }
     }
 
     function onEpochStatsEvent(value: any) {
       setEpochStats((prev) => [...prev, value]);
       console.log(value);
+      if (!isTraining) {
+        setIsTraining(true);
+      }
+    }
+
+    function onTrainingDataEvent(value: any) {
+      setTrainingData((prev) => [...prev, value]);
+      console.log(value);
+      if (!isTraining) {
+        setIsTraining(true);
+      }
     }
 
     socket.on("connect", onConnectEvent);
     socket.on("disconnect", onDisconnectEvent);
     socket.on("timing_stats", onTimingEvent);
     socket.on("epoch_stats", onEpochStatsEvent);
+    socket.on("training_data", onTrainingDataEvent);
 
     return () => {
       socket.off("connect", onConnectEvent);
       socket.off("disconnect", onDisconnectEvent);
       socket.off("timing_stats", onTimingEvent);
       socket.off("epoch_stats", onEpochStatsEvent);
+      socket.off("training_data", onTrainingDataEvent);
     };
   }, []);
+
+  const epoch =
+    epochStats.length > 0 ? epochStats[epochStats.length - 1].epoch : 0;
+  const totalEpochs =
+    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 0;
 
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
-      <div>{timingData.length}</div>
+      <div>TIMING: {timingData.length}</div>
+      <div>EPOCH: {epochStats.length}</div>
+      <div>TRAINING: {trainingData.length}</div>
       {isTraining ? (
         <>
           <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
             <div className="flex w-96 flex-col gap-4">
               <Progress
-                progress={epochStats[epochStats.length - 1].epoch}
-                total={epochStats[epochStats.length - 1].epochs}
+                progress={epoch}
+                total={totalEpochs}
                 startTime={startTime}
               />
               <Earnings />
@@ -110,8 +134,8 @@ export default function Home() {
               <Devices />
             </div>
             <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
-              <Loss />
-              <Timing timingData={timingData} />
+              <Loss epochStats={epochStats} trainingData={trainingData} />
+              <Timing timingData={timingData} epoch={epoch} />
               <ModelVisualization />
             </div>
           </div>

@@ -28,14 +28,15 @@ export default function Progress({
         </div>
       </div>
       <div className="mb-2 flex items-end justify-between">
-        <div className="text-4xl font-medium">75%</div>
-        <div className="text-lg text-muted-foreground">75/100 Epochs</div>
+        <div className="text-4xl font-medium">{(progress / total) * 100}%</div>
+        <div className="text-lg text-muted-foreground">
+          {progress}/{total} Epochs
+        </div>
       </div>
       <ProgressBar progress={progress} total={total} />
     </Card>
   );
 }
-
 export function ProgressBar({
   progress,
   total,
@@ -43,7 +44,7 @@ export function ProgressBar({
   progress: number;
   total: number;
 }) {
-  const scaledProgress = Math.floor(progress / 2);
+  const scaledProgress = Math.floor((progress / total) * 50);
 
   return (
     <div className="relative z-0 flex h-6 w-full justify-between">

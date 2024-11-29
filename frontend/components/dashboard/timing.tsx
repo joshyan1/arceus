@@ -3,8 +3,15 @@ import { Card } from "../ui/card";
 import TimingChart from "./timing-chart";
 import { TimingData } from "@/lib/types";
 
-export default function Timing({ timingData }: { timingData: TimingData[] }) {
-  const lastBatch = timingData[timingData.length - 1].batch_idx;
+export default function Timing({
+  timingData,
+  epoch,
+}: {
+  timingData: TimingData[];
+  epoch: number;
+}) {
+  const lastBatch =
+    timingData.length > 0 ? timingData[timingData.length - 1].batch_idx : 0;
 
   return (
     <Card className="flex flex-col p-4">
@@ -12,7 +19,7 @@ export default function Timing({ timingData }: { timingData: TimingData[] }) {
         <div>TIMING</div>
         <div className="flex items-center gap-2">
           <Activity className="size-3.5" />
-          BATCH {lastBatch}
+          EPOCH {epoch} BATCH {lastBatch}
         </div>
       </div>
       <TimingChart timingData={timingData} />
