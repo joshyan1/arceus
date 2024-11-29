@@ -3,34 +3,8 @@
 import { Card } from "@/components/ui/card";
 import { CircleGauge, Cpu, Laptop, Layers, Monitor, Zap } from "lucide-react";
 import { useAppContext } from "../providers/context";
-
-const you = {
-  name: "CURSOR REJECT",
-  cpu: "M1",
-  tflops: 1.2,
-  task: [3],
-  usage: 0.5,
-  battery: 1,
-};
-
-const devices = [
-  {
-    name: "THE RAGE",
-    cpu: "M3 MAX",
-    tflops: 3.8,
-    task: [1],
-    usage: 0.7,
-    battery: 1,
-  },
-  {
-    name: "PLAYSTATION 5",
-    cpu: "M2",
-    tflops: 2.9,
-    task: [2],
-    usage: 0.3,
-    battery: 0.5,
-  },
-];
+import { cn } from "@/lib/utils";
+import { you, devices, Device } from "@/lib/devices";
 
 export default function Devices() {
   return (
@@ -51,7 +25,7 @@ export default function Devices() {
           <div className="my-2 h-px w-full bg-muted" />
 
           {devices.map((device) => (
-            <DeviceCard key={device.name} device={device} />
+            <DeviceCard key={device.id} device={device} />
           ))}
         </div>
       </div>
@@ -59,15 +33,19 @@ export default function Devices() {
   );
 }
 
-function DeviceCard({ device }: { device: (typeof devices)[number] }) {
-  const { setHoveredLayers } = useAppContext();
+function DeviceCard({ device }: { device: Device }) {
+  const { hoveredDeviceId, setHoveredDeviceId } = useAppContext();
 
   return (
     <Card
-      key={device.name}
-      className="flex select-none flex-col rounded-lg bg-nested-card p-2 pr-3 font-supply text-sm"
-      onMouseEnter={() => setHoveredLayers(device.task)}
-      onMouseLeave={() => setHoveredLayers([])}
+      className={cn(
+        "flex select-none flex-col rounded-lg bg-nested-card p-2 pr-3 font-supply text-sm transition-all",
+        hoveredDeviceId !== null &&
+          hoveredDeviceId !== device.id &&
+          "opacity-50",
+      )}
+      onMouseEnter={() => setHoveredDeviceId(device.id)}
+      onMouseLeave={() => setHoveredDeviceId(null)}
     >
       <div className="flex w-full items-center gap-2">
         <div>{device.name}</div>

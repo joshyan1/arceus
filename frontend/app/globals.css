@@ -90,10 +90,10 @@ body {
 }
 
 .dot-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: dot-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@keyframes pulse {
+@keyframes dot-pulse {
   0%,
   100% {
     opacity: 0.6;

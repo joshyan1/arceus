@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { Settings } from "lucide-react";
+import { CloudOff, Monitor, Settings } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Nav() {
   return (
@@ -15,9 +24,27 @@ export default function Nav() {
         <div className="translate-y-px">Some Model</div>
       </div>
 
-      <Button variant="ghost" size="icon">
-        <Settings className="size-4" />
-      </Button>
+      <div className="flex items-center gap-2">
+        {/* <div className="flex font-supply text-xs">
+          <div>CPU</div>
+        </div> */}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Settings className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled>
+              <Monitor className="size-3.5" /> Appearance
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <CloudOff className="size-3.5" /> Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </nav>
   );
 }

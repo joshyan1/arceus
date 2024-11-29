@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
+import { devices, you } from "@/lib/devices";
 
 const dimensions = [40, 40, 40, 40, 40, 40];
 const connections = generateConnections(dimensions);
@@ -13,7 +14,9 @@ console.log(connections);
 export default function ModelVisualization() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
-  const { hoveredLayers } = useAppContext();
+  const { hoveredDeviceId } = useAppContext();
+  const hoveredLayers =
+    [you, ...devices].find((d) => d.id === hoveredDeviceId)?.task || [];
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
