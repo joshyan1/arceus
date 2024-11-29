@@ -7,3 +7,16 @@ export type Device = {
   usage: number;
   battery: number;
 };
+
+export type TimingData = {
+  avg_backward: number;
+  avg_backward_tflop: number;
+  avg_comm: number;
+  avg_forward: number;
+  avg_forward_tflops: number;
+  avg_prep: number;
+  avg_update: number;
+  batch_idx: number;
+  total_computation: number;
+  total_overhead: number;
+};
