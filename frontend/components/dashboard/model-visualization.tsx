@@ -40,11 +40,10 @@ export default function ModelVisualization() {
     <Card
       ref={containerRef}
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
-      style={{ minHeight: "200px" }}
     >
       <div
         className={cn(
-          "absolute -z-10 h-full w-[200%] overflow-visible",
+          "absolute -z-20 h-full w-[200%] overflow-visible opacity-75",
           animationIndex === dimensions.length ? "flex" : "hidden",
         )}
       >
@@ -55,6 +54,13 @@ export default function ModelVisualization() {
           className="dotted-pattern absolute h-full w-full bg-primary"
         ></div>
       </div>
+
+      <div
+        className="ripple-cover absolute right-0 -z-10 h-full"
+        style={{
+          width: layerSpacing + 80,
+        }}
+      ></div>
 
       {layerSpacing > 0 &&
         dimensions.map((dimension, i) => (
