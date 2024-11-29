@@ -317,13 +317,61 @@ class DistributedNeuralNetwork:
                 
                 batch_time = time.time() - batch_start
                 
-                if (batch_idx + 1) % 10 == 0:
+                if (batch_idx + 1) % 50 == 0:
                     print(f"\rEpoch {epoch+1}/{epochs} "
                           f"[Batch {batch_idx+1}/{len(train_loader)}] "
                           f"Loss: {batch_loss:.4f} "
                           f"Acc: {batch_acc:.4f} "
                           f"Time: {batch_time:.2f}s")
                     self.print_timing_stats(batch_idx + 1)
+
+            # Accidentally deleted this validation loop
+            epoch_loss /= n_batches
+            epoch_acc /= n_batches
+            
+            # Validation loop
+            val_loss = 0
+            val_acc = 0
+            n_val_batches = 0
+            
+            with torch.no_grad():
+                for data, target in val_loader:
+                    data = data.to(self.device)
+                    target = target.to(self.device)
+                    
+                    val_activations = self.forward(data)
+                    val_pred = val_activations[-1]
+                    val_loss += self.compute_loss(target, val_pred)
+                    val_acc += self.compute_accuracy(target, val_pred)
+                    n_val_batches += 1
+
+                
+            
+            val_loss /= n_val_batches
+            val_acc /= n_val_batches
+            epoch_time = time.time() - epoch_start
+
+            if self.message_queue:
+                self.message_queue.put({
+                    'event': 'epoch_stats',
+                    'data': {
+                        'epoch': epoch + 1,
+                        'epochs': epochs,
+                        'train_loss': float(epoch_loss),
+                        'train_acc': float(epoch_acc), 
+                        'val_loss': float(val_loss),
+                        'val_acc': float(val_acc),
+                        'epoch_time': epoch_time
+                    },
+                    'room': self.job_id
+                })
+            
+            print(f"\nEpoch {epoch+1:2d}/{epochs} - "
+                  f"Loss: {epoch_loss:.4f} - "
+                  f"Acc: {epoch_acc:.4f} - "
+                  f"Val Loss: {val_loss:.4f} - "
+                  f"Val Acc: {val_acc:.4f}")
+            print("-" * 100)
             
             epoch_time = time.time() - epoch_start
             print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")
