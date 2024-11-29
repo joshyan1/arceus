@@ -34,23 +34,24 @@ export default function Home() {
     }
 
     function onTimingEvent(value: any) {
-      setTimingData(timingData.concat(value));
+      setTimingData((prev) => [...prev, value]);
     }
 
     socket.on("connect", onConnectEvent);
     socket.on("disconnect", onDisconnectEvent);
-    socket.on("timing", onTimingEvent);
+    socket.on("timing_stats", onTimingEvent);
 
     return () => {
       socket.off("connect", onConnectEvent);
       socket.off("disconnect", onDisconnectEvent);
-      socket.off("timing", onTimingEvent);
+      socket.off("timing_stats", onTimingEvent);
     };
   }, [timingData]);
 
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
+      <div>{JSON.stringify(timingData)}</div>
       <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
         <div className="flex w-96 flex-col gap-4">
           <Progress progress={75} />
