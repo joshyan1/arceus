@@ -38,6 +38,7 @@ class TrainingNamespace(Namespace):
         
     def emit_training_update(self, data):
         """Emit training update asynchronously"""
+        print(f"Emitting training update for batch {data['batch']}")
         socketio.start_background_task(self._async_emit, 'training_update', data)
         
     def emit_batch_complete(self, data):
