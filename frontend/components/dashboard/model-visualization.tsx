@@ -93,8 +93,6 @@ function Layer({
   connections?: { data: Connection[]; nextDimension: number };
   hovered: boolean;
 }) {
-  if (connections) console.log("connections", connections);
-
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const [lineContainerHeight, setLineContainerHeight] = useState(0);
 
@@ -106,7 +104,7 @@ function Layer({
   return (
     <div
       className={cn(
-        "bg-nested-card flex h-5/6 w-10 flex-col justify-between rounded-lg border shadow-lg shadow-muted/50",
+        "flex h-5/6 w-10 flex-col justify-between rounded-lg border bg-nested-card shadow-lg shadow-muted/50",
         hovered ? "opacity-100" : "opacity-25",
       )}
     >
