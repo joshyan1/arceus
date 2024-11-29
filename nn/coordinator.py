@@ -409,6 +409,10 @@ class DistributedNeuralNetwork:
         if isinstance(y_pred, np.ndarray):
             y_pred = torch.from_numpy(y_pred).to(self.device)
             
+        batch_size = y_true.shape[0]
+        y_onehot = torch.zeros(batch_size, y_pred.shape[1], device=self.device)
+        y_onehot.scatter_(1, y_true.unsqueeze(1), 1)
+        
         criterion = torch.nn.CrossEntropyLoss()
         return criterion(y_pred, y_true).item()
 
