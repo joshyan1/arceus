@@ -3,12 +3,15 @@
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
+import { useAppContext } from "../providers/context";
+
+const dimensions = [40, 40, 40];
+const connections = generateConnections(dimensions);
 
 export default function ModelVisualization() {
-  const dimensions = [40, 40, 40];
-  const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
+  const { hoveredLayers } = useAppContext();
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -66,6 +69,9 @@ export default function ModelVisualization() {
                 : undefined
             }
             animationIndex={animationIndex}
+            hovered={
+              hoveredLayers.length === 0 || hoveredLayers.includes(i + 1)
+            }
           />
         ))}
     </Card>
@@ -78,12 +84,14 @@ function Layer({
   spacing,
   animationIndex,
   connections,
+  hovered,
 }: {
   layer: number;
   dimension: number;
   spacing: number;
   animationIndex: number;
   connections?: { data: Connection[]; nextDimension: number };
+  hovered: boolean;
 }) {
   if (connections) console.log("connections", connections);
 
@@ -96,7 +104,12 @@ function Layer({
   }, [lineContainerRef.current]);
 
   return (
-    <div className="bg-nested-card flex h-5/6 w-10 flex-col justify-between rounded-lg border shadow-lg shadow-muted/50">
+    <div
+      className={cn(
+        "bg-nested-card flex h-5/6 w-10 flex-col justify-between rounded-lg border shadow-lg shadow-muted/50",
+        hovered ? "opacity-100" : "opacity-25",
+      )}
+    >
       <div className="h-full py-4">
         <div
           className={cn(

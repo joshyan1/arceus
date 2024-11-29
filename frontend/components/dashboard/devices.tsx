@@ -1,11 +1,14 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { CircleGauge, Cpu, Laptop, Layers, Monitor, Zap } from "lucide-react";
+import { useAppContext } from "../providers/context";
 
 const you = {
   name: "CURSOR REJECT",
   cpu: "M1",
   tflops: 1.2,
-  task: "L3",
+  task: [3],
   usage: 0.5,
   battery: 1,
 };
@@ -15,7 +18,7 @@ const devices = [
     name: "THE RAGE",
     cpu: "M3 MAX",
     tflops: 3.8,
-    task: "L1",
+    task: [1],
     usage: 0.7,
     battery: 1,
   },
@@ -23,7 +26,7 @@ const devices = [
     name: "PLAYSTATION 5",
     cpu: "M2",
     tflops: 2.9,
-    task: "L2",
+    task: [2],
     usage: 0.3,
     battery: 0.5,
   },
@@ -57,10 +60,14 @@ export default function Devices() {
 }
 
 function DeviceCard({ device }: { device: (typeof devices)[number] }) {
+  const { setHoveredLayers } = useAppContext();
+
   return (
     <Card
       key={device.name}
       className="bg-nested-card flex select-none flex-col rounded-lg p-2 pr-3 font-supply text-sm"
+      onMouseEnter={() => setHoveredLayers(device.task)}
+      onMouseLeave={() => setHoveredLayers([])}
     >
       <div className="flex w-full items-center gap-2">
         <div>{device.name}</div>
@@ -71,8 +78,7 @@ function DeviceCard({ device }: { device: (typeof devices)[number] }) {
       </div>
       <div className="grid grid-cols-2">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Layers className="size-3.5 text-primary" />
-          {device.task}
+          <Layers className="size-3.5 text-primary" />L{device.task.join(",")}
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <CircleGauge className="size-3.5 text-primary" />

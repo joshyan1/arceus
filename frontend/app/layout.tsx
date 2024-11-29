@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/theme";
+import Providers from "@/components/providers";
 
 const montreal = localFont({
   src: [
@@ -64,13 +64,7 @@ export default function RootLayout({
       <body
         className={`${montreal.variable} ${editorial.variable} ${supply.variable}`}
       >
-        <ThemeProvider
-          attribute="class"
-          forcedTheme="dark"
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
