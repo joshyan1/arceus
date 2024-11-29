@@ -4,7 +4,7 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [20, 20, 20, 20];
+  const dimensions = [30, 30, 30, 30];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -29,14 +29,14 @@ export default function ModelVisualization() {
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
       style={{ minHeight: "200px" }}
     >
-      <div className="absolute -z-10 h-full w-[200%] overflow-visible">
+      {/* <div className="absolute -z-10 h-full w-[200%] overflow-visible">
         <div
           style={{
             left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
           }}
           className="dotted-pattern absolute h-full w-full bg-primary"
         ></div>
-      </div>
+      </div> */}
 
       {layerSpacing > 0 &&
         dimensions.map((dimension, i) => (
@@ -104,9 +104,9 @@ function Layer({
                     style={{
                       top: `${top.from * 100}%`,
                     }}
-                    className="absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className="nn-start-node absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
-                  {/* <div
+                  <div
                     style={{
                       top: `${top.from * 100}%`,
                       width: `${lineLength}px`,
@@ -114,13 +114,13 @@ function Layer({
                       transform: `rotate(${angle}rad) translateY(2px)`,
                     }}
                     className="nn-line-pulse absolute left-5 h-px bg-foreground"
-                  /> */}
+                  />
                   <div
                     style={{
                       top: `${top.to * 100}%`,
                       transform: `translateX(${spacing + 40}px)`,
                     }}
-                    className="absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className="nn-end-node absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
                 </Fragment>
               );

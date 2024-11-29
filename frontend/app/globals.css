@@ -95,7 +95,7 @@ body {
 }
 
 .nn-line-pulse {
-  animation: line-pulse 2s linear infinite;
+  animation: line-pulse 1s linear infinite;
   background: linear-gradient(
     90deg,
     hsl(var(--muted)) 0%,
@@ -143,4 +143,29 @@ body {
   mask-position: center;
   -webkit-mask-position: center;
   animation: ripple 2s linear infinite;
+}
+
+@keyframes node-pulse {
+  0%,
+  25% {
+    background-color: hsl(var(--muted));
+  }
+  40% {
+    background-color: hsl(var(--foreground));
+  }
+  55%,
+  100% {
+    background-color: hsl(var(--muted));
+  }
+}
+
+.nn-start-node {
+  animation: node-pulse 1s infinite;
+  animation-delay: 0s;
+}
+
+.nn-end-node {
+  background-color: hsl(var(--muted));
+  animation: node-pulse 1s infinite;
+  animation-delay: 0.55s;
 }
