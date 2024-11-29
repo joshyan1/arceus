@@ -88,6 +88,14 @@ body {
 @keyframes line-pulse {
   0% {
     background-position: 100% 0%;
+    opacity: 0;
+  }
+  25%,
+  85% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0;
   }
   100% {
     background-position: -100% 0%;
@@ -95,7 +103,7 @@ body {
 }
 
 .nn-line-pulse {
-  animation: line-pulse 1s linear infinite;
+  animation: line-pulse 1.5s linear;
   background: linear-gradient(
     90deg,
     hsl(var(--muted)) 0%,
@@ -105,14 +113,76 @@ body {
     hsl(var(--muted)) 20%
   );
   background-size: 200% 100%;
+  opacity: 0;
+}
+
+@keyframes node-pulse-start {
+  0%,
+  25% {
+    background-color: hsl(var(--muted));
+  }
+  40% {
+    background-color: hsl(var(--foreground));
+  }
+  55%,
+  100% {
+    background-color: hsl(var(--muted));
+  }
+}
+
+@keyframes node-pulse-end {
+  0%,
+  70% {
+    background-color: hsl(var(--muted));
+  }
+  85% {
+    background-color: hsl(var(--foreground));
+  }
+  100% {
+    background-color: hsl(var(--muted));
+  }
+}
+
+.nn-start-node {
+  opacity: 0;
+  animation:
+    node-pulse-start 1.5s,
+    nn-opacity 1.5s;
+}
+
+.nn-end-node {
+  opacity: 0;
+  background-color: hsl(var(--muted));
+  animation:
+    node-pulse-end 1.5s,
+    nn-opacity 1.5s;
+}
+
+@keyframes nn-opacity {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  90% {
+    opacity: 1;
+  }
 }
 
 @keyframes ripple {
   0% {
+    opacity: 0;
     mask-size: 2% 2%;
     -webkit-mask-size: 2% 2%;
   }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
   100% {
+    opacity: 0;
     mask-size: 1700% 1700%;
     -webkit-mask-size: 1700% 1700%;
   }
@@ -127,45 +197,19 @@ body {
   mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 7%,
-    black 8%,
-    transparent 10%
+    black 6.5%,
+    transparent 6.8%
   );
   -webkit-mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 7%,
-    black 8%,
-    transparent 10%
+    black 6.5%,
+    transparent 6.8%
   );
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   mask-position: center;
   -webkit-mask-position: center;
-  animation: ripple 2s linear infinite;
-}
-
-@keyframes node-pulse {
-  0%,
-  25% {
-    background-color: hsl(var(--muted));
-  }
-  40% {
-    background-color: hsl(var(--foreground));
-  }
-  55%,
-  100% {
-    background-color: hsl(var(--muted));
-  }
-}
-
-.nn-start-node {
-  animation: node-pulse 1s infinite;
-  animation-delay: 0s;
-}
-
-.nn-end-node {
-  background-color: hsl(var(--muted));
-  animation: node-pulse 1s infinite;
-  animation-delay: 0.55s;
+  animation: ripple 1.5s linear;
+  opacity: 0;
 }

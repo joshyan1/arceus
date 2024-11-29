@@ -1,10 +1,11 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
-import { useRef, useState, useLayoutEffect, Fragment } from "react";
+import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [30, 30, 30, 30];
+  const dimensions = [40, 40, 40];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -23,20 +24,34 @@ export default function ModelVisualization() {
     setLayerSpacing(spacing);
   }, [dimensions.length]);
 
+  const [animationIndex, setAnimationIndex] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationIndex((prev) => (prev % dimensions.length) + 1);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [dimensions.length]);
+
   return (
     <Card
       ref={containerRef}
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
       style={{ minHeight: "200px" }}
     >
-      {/* <div className="absolute -z-10 h-full w-[200%] overflow-visible">
+      <div
+        className={cn(
+          "absolute -z-10 h-full w-[200%] overflow-visible",
+          animationIndex === dimensions.length ? "flex" : "hidden",
+        )}
+      >
         <div
           style={{
             left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
           }}
           className="dotted-pattern absolute h-full w-full bg-primary"
         ></div>
-      </div> */}
+      </div>
 
       {layerSpacing > 0 &&
         dimensions.map((dimension, i) => (
@@ -50,6 +65,7 @@ export default function ModelVisualization() {
                 ? { data: connections[i], nextDimension: dimensions[i + 1] }
                 : undefined
             }
+            animationIndex={animationIndex}
           />
         ))}
     </Card>
@@ -60,11 +76,13 @@ function Layer({
   layer,
   dimension,
   spacing,
+  animationIndex,
   connections,
 }: {
   layer: number;
   dimension: number;
   spacing: number;
+  animationIndex: number;
   connections?: { data: Connection[]; nextDimension: number };
 }) {
   if (connections) console.log("connections", connections);
@@ -81,7 +99,10 @@ function Layer({
     <div className="bg-nested-card flex h-5/6 w-10 flex-col justify-between rounded-lg border shadow-lg shadow-muted/50">
       <div className="h-full py-4">
         <div
-          className="relative flex h-full w-full justify-center"
+          className={cn(
+            "relative h-full w-full justify-center",
+            animationIndex === layer ? "flex" : "hidden",
+          )}
           ref={lineContainerRef}
         >
           {connections &&
@@ -104,7 +125,7 @@ function Layer({
                     style={{
                       top: `${top.from * 100}%`,
                     }}
-                    className="nn-start-node absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className="nn-start-node nn-opacity absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
                   <div
                     style={{
@@ -113,14 +134,14 @@ function Layer({
                       transformOrigin: "0 0",
                       transform: `rotate(${angle}rad) translateY(2px)`,
                     }}
-                    className="nn-line-pulse absolute left-5 h-px bg-foreground"
+                    className="nn-line-pulse nn-opacity absolute left-5 h-px bg-foreground"
                   />
                   <div
                     style={{
                       top: `${top.to * 100}%`,
                       transform: `translateX(${spacing + 40}px)`,
                     }}
-                    className="nn-end-node absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className="nn-end-node nn-opacity absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
                 </Fragment>
               );
