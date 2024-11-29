@@ -20,6 +20,9 @@ class DistributedNeuralNetwork:
         self.max_devices = len(layer_sizes) - 1
         self.device_connections = {}
         self.quantization_bits = quantization_bits
+        self.job_id = 'training_room'  # Use a default room or pass it as a parameter
+        self.message_queue = None
+
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         self.timing_stats = {
             'forward_time': [],
@@ -214,7 +217,27 @@ class DistributedNeuralNetwork:
             print(f"Total overhead: {avg_comm + avg_prep:.4f}s")
             print("-" * 50)
 
-    def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
+            print("Sending timing stats to frontend")
+
+            # Instead of emitting directly, put the message in the queue
+            if self.message_queue:
+                self.message_queue.put({
+                    'event': 'timing_stats',
+                    'data': {
+                        'avg_forward': avg_forward,
+                        'avg_backward': avg_backward,
+                        'avg_update': avg_update,
+                        'avg_comm': avg_comm,
+                        'avg_prep': avg_prep,
+                        'total_computation': avg_forward + avg_backward + avg_update,
+                        'total_overhead': avg_comm + avg_prep,
+                        'batch_idx': batch_idx
+                    },
+                    'room': self.job_id
+                })
+
+    def train(self, train_loader, message_queue, val_loader, epochs=10, learning_rate=0.1):
+        self.message_queue = message_queue
         print("\nStarting distributed training across devices...")
         print(f"Learning rate: {learning_rate}")
         print(f"Quantization bits: {self.quantization_bits}")

@@ -1,14 +1,17 @@
-from flask import Flask, request, jsonify
+from .app import app, socketio  # Import app and socketio from app.py
+from flask import request, jsonify
+from flask_socketio import join_room
 from nn.coordinator import DistributedNeuralNetwork, previous_training_sessions
 import threading
 import os
-from typing import Dict, Optional
+from typing import Dict
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import json
 import numpy as np
+import queue
 
-app = Flask(__name__)
+
 
 # Global state
 coordinator = None
@@ -16,6 +19,9 @@ lock = threading.Lock()
 registered_devices = {}
 active_jobs: Dict[str, dict] = {}  # job_id -> job_config
 aggregated_teraflops_data = {}
+
+# Create a message queue for inter-thread communication
+message_queue = queue.Queue()
 
 @app.route('/api/jobs', methods=['POST'])
 def create_job():
@@ -133,74 +139,98 @@ def initialize_network(job_id):
     except Exception as e:
         return jsonify({'error': f'Failed to initialize network: {str(e)}'}), 500
 
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    join_room(room)
+    print(f"Client joined room: {room}")
+
+# Function to emit messages from the main thread
+def emit_messages():
+    while True:
+        message = message_queue.get()
+        if message is None:
+            break  # Exit the loop if None is received
+        socketio.emit(message['event'], message['data'], room=message.get('room'))
+        message_queue.task_done()
+
+# Start the message emitter in a background thread
+emitter_thread = threading.Thread(target=emit_messages)
+emitter_thread.daemon = True
+emitter_thread.start()
+
+
 @app.route('/api/network/train/<job_id>', methods=['POST'])
 def start_training(job_id):
     """Start the training process for a specific job"""
     if job_id not in active_jobs:
         return jsonify({'error': 'Job not found'}), 404
-        
+
     job_config = active_jobs[job_id]
-    
+
     if not job_config['coordinator']:
         return jsonify({'error': 'Network not initialized'}), 400
-        
+
     if job_config['status'] != 'initialized':
         return jsonify({'error': 'Network must be initialized before training'}), 400
-        
+
     data = request.get_json() or {}
     epochs = data.get('epochs', 10)
     learning_rate = data.get('learning_rate', 0.1)
-    
+
     try:
         # Start training in a separate thread
         def train_thread():
             dataset_config = job_config['dataset_config']
-            
+
             # Initialize dataset based on configuration
             transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize(**dataset_config.get('normalize', {'mean': (0.1307,), 'std': (0.3081,)}))
             ])
-            
+
             # Load dataset based on configuration
             dataset_class = getattr(datasets, dataset_config['name'])
             train_dataset = dataset_class(
-                'data', 
-                train=True, 
-                download=True, 
+                'data',
+                train=True,
+                download=True,
                 transform=transform,
                 **dataset_config.get('args', {})
             )
             val_dataset = dataset_class(
-                'data', 
-                train=False, 
+                'data',
+                train=False,
                 transform=transform,
                 **dataset_config.get('args', {})
             )
-            
+
             train_loader = DataLoader(
-                train_dataset, 
-                batch_size=dataset_config.get('batch_size', 256), 
+                train_dataset,
+                batch_size=dataset_config.get('batch_size', 256),
                 shuffle=True
             )
             val_loader = DataLoader(
-                val_dataset, 
+                val_dataset,
                 batch_size=dataset_config.get('val_batch_size', 1000)
             )
-            
+
             job_config['status'] = 'training'
+
+            # Pass the message queue to the coordinator
             job_config['coordinator'].train(
-                train_loader, 
-                val_loader, 
-                epochs=epochs, 
-                learning_rate=learning_rate
+                train_loader,
+                message_queue,
+                val_loader,
+                epochs=epochs,
+                learning_rate=learning_rate,
             )
             print("Training completed. Aggregating teraflops data...")
             job_config['status'] = 'completed'
-        
+
         thread = threading.Thread(target=train_thread)
         thread.start()
-        
+
         return jsonify({
             'message': 'Training started',
             'epochs': epochs,
@@ -208,7 +238,7 @@ def start_training(job_id):
         })
     except Exception as e:
         return jsonify({'error': f'Failed to start training: {str(e)}'}), 500
-
+    
 @app.route('/api/devices/<int:port>', methods=['DELETE'])
 def unregister_device(port):
     """Unregister a device"""
@@ -261,6 +291,7 @@ def create_app():
     os.makedirs('data', exist_ok=True)
     return app
 
+
+
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=4000)
+    socketio.run(app, host='0.0.0.0', port=4000, debug=True)
