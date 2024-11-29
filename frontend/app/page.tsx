@@ -24,9 +24,35 @@ export default function Home() {
     };
   }, []);
 
+  function startTraining() {
+    const jobId = "1";
+    fetch(`http://127.0.0.1:4000/api/network/train/${jobId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        epochs: 10,
+        learning_rate: 0.1,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "Training started") {
+          console.log("Training started");
+        } else {
+          console.error("Training failed to start:", data.error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error starting training:", error);
+      });
+  }
+
   useEffect(() => {
     function onConnectEvent() {
       setIsConnected(true);
+      socket.emit("join", { room: "training_room" });
     }
 
     function onDisconnectEvent() {
@@ -46,12 +72,13 @@ export default function Home() {
       socket.off("disconnect", onDisconnectEvent);
       socket.off("timing_stats", onTimingEvent);
     };
-  }, [timingData]);
+  }, []);
 
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
       <div>{JSON.stringify(timingData)}</div>
+      <button onClick={startTraining}>Start Training</button>
       <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
         <div className="flex w-96 flex-col gap-4">
           <Progress progress={75} />
