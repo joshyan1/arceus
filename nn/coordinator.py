@@ -420,8 +420,16 @@ class DistributedNeuralNetwork:
         if isinstance(y_pred, np.ndarray):
             y_pred = torch.from_numpy(y_pred).to(self.device)
             
-        criterion = torch.nn.CrossEntropyLoss()
-        return criterion(y_pred, y_true).item()
+        # Create one-hot encoding for loss calculation
+        batch_size = y_true.shape[0]
+        y_onehot = torch.zeros(batch_size, y_pred.shape[1], device=self.device)
+        y_onehot.scatter_(1, y_true.unsqueeze(1), 1)
+        
+        # Compute cross entropy loss manually for numerical stability
+        epsilon = 1e-7
+        y_pred = torch.clamp(y_pred, epsilon, 1 - epsilon)
+        loss = -torch.sum(y_onehot * torch.log(y_pred)) / batch_size
+        return loss.item()
 
     def compute_accuracy(self, y_true, y_pred):
         """Compute accuracy using PyTorch"""
