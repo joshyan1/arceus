@@ -4,7 +4,7 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [20, 20, 20];
+  const dimensions = [20, 20, 20, 20];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -29,6 +29,13 @@ export default function ModelVisualization() {
       className="relative col-span-2 flex items-center justify-evenly font-supply"
       style={{ minHeight: "200px" }}
     >
+      <div
+        style={{
+          left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
+        }}
+        className="dotted-pattern absolute z-20 h-full w-full bg-primary"
+      ></div>
+
       {layerSpacing > 0 &&
         dimensions.map((dimension, i) => (
           <Layer
@@ -97,7 +104,7 @@ function Layer({
                     }}
                     className="absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
-                  <div
+                  {/* <div
                     style={{
                       top: `${top.from * 100}%`,
                       width: `${lineLength}px`,
@@ -105,7 +112,7 @@ function Layer({
                       transform: `rotate(${angle}rad) translateY(2px)`,
                     }}
                     className="nn-line-pulse absolute left-5 h-px bg-foreground"
-                  />
+                  /> */}
                   <div
                     style={{
                       top: `${top.to * 100}%`,

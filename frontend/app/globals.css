@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -15,7 +16,6 @@ body {
     text-wrap: balance;
   }
 }
-
 
 @layer base {
   :root {
@@ -74,7 +74,6 @@ body {
   }
 }
 
-
 @layer base {
   * {
     @apply border-border;
@@ -95,12 +94,51 @@ body {
 
 .nn-line-pulse {
   animation: line-pulse 2s linear infinite;
-  background: linear-gradient(90deg, 
-    hsl(var(--muted)) 0%, 
-    rgba(255,255,255,0.3) 5%, 
-    rgba(255,255,255,1) 10%, 
-    rgba(255,255,255,0.3) 15%, 
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    rgba(255, 255, 255, 0.3) 5%,
+    rgba(255, 255, 255, 1) 10%,
+    rgba(255, 255, 255, 0.3) 15%,
     hsl(var(--muted)) 20%
   );
   background-size: 200% 100%;
+}
+
+@keyframes ripple {
+  0% {
+    mask-size: 2% 2%;
+    -webkit-mask-size: 2% 2%;
+  }
+  100% {
+    mask-size: 200% 200%;
+    -webkit-mask-size: 200% 200%;
+  }
+}
+
+.dotted-pattern {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.2) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 5px 5px;
+  mask-image: radial-gradient(
+    circle at center,
+    transparent 5%,
+    black 7%,
+    black 8%,
+    transparent 10%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle at center,
+    transparent 5%,
+    black 7%,
+    black 8%,
+    transparent 10%
+  );
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  animation: ripple 2s linear infinite;
 }
