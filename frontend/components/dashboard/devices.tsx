@@ -1,12 +1,13 @@
 import { Card } from "@/components/ui/card";
-import { CircleGauge, Cpu, Laptop, Monitor, Zap } from "lucide-react";
+import { CircleGauge, Cpu, Laptop, Layers, Monitor, Zap } from "lucide-react";
 
 const you = {
   name: "CURSOR REJECT",
   cpu: "M1",
   tflops: 1.2,
-  task: "Layer 3",
+  task: "L3",
   usage: 0.5,
+  battery: 1,
 };
 
 const devices = [
@@ -14,22 +15,17 @@ const devices = [
     name: "THE RAGE",
     cpu: "M3 MAX",
     tflops: 3.8,
-    task: "Layer 1",
+    task: "L1",
     usage: 0.7,
+    battery: 1,
   },
   {
     name: "PLAYSTATION 5",
     cpu: "M2",
     tflops: 2.9,
-    task: "Layer 2",
+    task: "L2",
     usage: 0.3,
-  },
-  {
-    name: "JY EATER",
-    cpu: "M3",
-    tflops: 3.2,
-    task: "Layer 4",
-    usage: 0.4,
+    battery: 0.5,
   },
 ];
 
@@ -64,25 +60,32 @@ function DeviceCard({ device }: { device: (typeof devices)[number] }) {
   return (
     <Card
       key={device.name}
-      className="bg-nested-card flex flex-col gap-2 rounded-lg p-2 pr-3"
+      className="bg-nested-card flex select-none flex-col rounded-lg p-2 pr-3 font-supply text-sm"
     >
-      <div className="flex items-center justify-between">
-        <div className="font-supply text-sm">
-          <div>{device.name}</div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Cpu className="size-3.5 text-primary" />
-            {device.cpu}
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <CircleGauge className="size-3.5 text-primary" />
-            {device.tflops} TFLOPS
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Monitor className="size-3.5 text-primary" />
-            {device.usage * 100}%
-          </div>
+      <div className="flex w-full items-center gap-2">
+        <div>{device.name}</div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Cpu className="size-3.5 text-primary" />
+          {device.cpu}
         </div>
-        <div className="text-lg font-medium">{device.task}</div>
+      </div>
+      <div className="grid grid-cols-2">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Layers className="size-3.5 text-primary" />
+          {device.task}
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <CircleGauge className="size-3.5 text-primary" />
+          {device.tflops} TFLOPS
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Monitor className="size-3.5 text-primary" />
+          {device.usage * 100}%
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Zap className="size-3.5 text-primary" />
+          {device.battery * 100}%
+        </div>
       </div>
     </Card>
   );
