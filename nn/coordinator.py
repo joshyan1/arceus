@@ -106,9 +106,7 @@ class DistributedNeuralNetwork:
     def forward(self, X):
         """Distributed forward pass with timing and activation tracking"""
         if isinstance(X, np.ndarray):
-            X = torch.from_numpy(X.copy()).to(self.device)
-        else:
-            X = X.to(self.device)
+            X = torch.from_numpy(X).to(self.device)
         
         start_prep = time.time()
         A = X
@@ -124,7 +122,7 @@ class DistributedNeuralNetwork:
             
             # Convert to numpy for gRPC transfer
             start_comm = time.time()
-            A_numpy = A.detach().cpu().numpy().copy()
+            A_numpy = A.detach().cpu().numpy()
             forward_request = pb2.ForwardRequest(
                 input_data=A_numpy.tobytes(),
                 input_shape=list(A_numpy.shape)
@@ -138,8 +136,9 @@ class DistributedNeuralNetwork:
             
             # Convert back to PyTorch tensor
             start_comm = time.time()
-            output_array = np.frombuffer(response.output_data, dtype=np.float32).reshape(response.output_shape).copy()
-            A = torch.from_numpy(output_array).to(self.device)
+            A = torch.from_numpy(
+                np.frombuffer(response.output_data, dtype=np.float32).reshape(response.output_shape)
+            ).to(self.device)
             activations.append(A)
             comm_time += time.time() - start_comm
             
@@ -163,9 +162,7 @@ class DistributedNeuralNetwork:
         """Distributed backward pass with timing"""
         start_prep = time.time()
         if isinstance(y_true, np.ndarray):
-            y_true = torch.from_numpy(y_true.copy()).to(self.device)
-        else:
-            y_true = y_true.to(self.device)
+            y_true = torch.from_numpy(y_true).to(self.device)
         
         # Create one-hot encoding using PyTorch
         batch_size = y_true.shape[0]
@@ -183,7 +180,7 @@ class DistributedNeuralNetwork:
             
             # Convert to numpy for gRPC transfer
             start_comm = time.time()
-            dA_numpy = dA.detach().cpu().numpy().copy()
+            dA_numpy = dA.detach().cpu().numpy()
             backward_request = pb2.BackwardRequest(
                 grad_data=dA_numpy.tobytes(),
                 grad_shape=list(dA_numpy.shape)
@@ -196,8 +193,9 @@ class DistributedNeuralNetwork:
             
             # Convert back to PyTorch tensor
             start_comm = time.time()
-            grad_array = np.frombuffer(response.grad_output_data, dtype=np.float32).reshape(response.grad_shape).copy()
-            dA = torch.from_numpy(grad_array).to(self.device)
+            dA = torch.from_numpy(
+                np.frombuffer(response.grad_output_data, dtype=np.float32).reshape(response.grad_shape)
+            ).to(self.device)
             comm_time += time.time() - start_comm
             
             total_backward_time += backward_time
@@ -266,8 +264,16 @@ class DistributedNeuralNetwork:
                 
                 batch_loss = self.compute_loss(target, y_pred)
                 batch_acc = self.compute_accuracy(target, y_pred)
+                batch_time = time.time() - batch_start
                 
                 if (batch_idx + 1) % 10 == 0:
+                    print(f"\rEpoch {epoch+1}/{epochs} "
+                          f"[Batch {batch_idx+1}/{len(train_loader)}] "
+                          f"Loss: {batch_loss:.4f} "
+                          f"Acc: {batch_acc:.4f} "
+                          f"Time: {batch_time:.2f}s")
+                    self.print_timing_stats(batch_idx + 1)
+
                     # Emit training update
                     training_update = {
                         'epoch': self.current_epoch,
@@ -342,7 +348,7 @@ class DistributedNeuralNetwork:
                     'backward_tflops': response.backward_tflops,
                     'total_tflops': response.forward_tflops + response.backward_tflops
                 }
-                # print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
+                print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
             except Exception as e:
                 print(f"Error retrieving teraflops for device {device_id}: {e}")
 

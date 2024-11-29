@@ -3,9 +3,11 @@ from threading import Lock
 import json
 import numpy as np
 from flask import request
+import asyncio
+from functools import partial
 
-# Initialize SocketIO
-socketio = SocketIO(cors_allowed_origins="*")
+# Initialize SocketIO with async mode
+socketio = SocketIO(cors_allowed_origins="*", async_mode='eventlet')
 
 # Thread synchronization
 thread = None
@@ -29,26 +31,30 @@ class TrainingNamespace(Namespace):
         client_id = request.sid
         self.clients.remove(client_id)
         print(f"Client {client_id} disconnected")
+    
+    async def _async_emit(self, event, data):
+        """Helper method for async emit"""
+        self.emit(event, data, namespace='/training')
         
     def emit_training_update(self, data):
-        """Emit training update to all connected clients"""
-        self.emit('training_update', data)
+        """Emit training update asynchronously"""
+        socketio.start_background_task(self._async_emit, 'training_update', data)
         
     def emit_batch_complete(self, data):
-        """Emit batch completion update"""
-        self.emit('batch_complete', data)
+        """Emit batch completion update asynchronously"""
+        socketio.start_background_task(self._async_emit, 'batch_complete', data)
         
     def emit_epoch_complete(self, data):
-        """Emit epoch completion update"""
-        self.emit('epoch_complete', data)
+        """Emit epoch completion update asynchronously"""
+        socketio.start_background_task(self._async_emit, 'epoch_complete', data)
         
     def emit_teraflops_update(self, data):
-        """Emit teraflops update"""
-        self.emit('teraflops_update', data)
+        """Emit teraflops update asynchronously"""
+        socketio.start_background_task(self._async_emit, 'teraflops_update', data)
         
     def emit_activation_update(self, data):
-        """Emit activation update"""
-        self.emit('activation_update', data)
+        """Emit activation update asynchronously"""
+        socketio.start_background_task(self._async_emit, 'activation_update', data)
 
 # Create namespace instance
 training_namespace = TrainingNamespace()

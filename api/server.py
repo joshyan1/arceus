@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 import json
 import numpy as np
 from api.socket import socketio
+import eventlet
 
 # Create Flask app
 app = Flask(__name__)
@@ -239,8 +240,8 @@ def get_device_teraflops():
     teraflops_data = coordinator.get_device_teraflops()
     
     # Print the teraflops data for each device
-    # for device_id, tflops in teraflops_data.items():
-    #     print(f"Device {device_id} - Forward TFLOPs: {tflops['forward_tflops']:.4f}, Backward TFLOPs: {tflops['backward_tflops']:.4f}")
+    for device_id, tflops in teraflops_data.items():
+        print(f"Device {device_id} - Forward TFLOPs: {tflops['forward_tflops']:.4f}, Backward TFLOPs: {tflops['backward_tflops']:.4f}")
 
     return jsonify(teraflops_data), 200
 
@@ -263,4 +264,9 @@ def get_previous_teraflops():
         return jsonify(previous_training_sessions), 200
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=4000, allow_unsafe_werkzeug=True)
+    # Use eventlet WSGI server
+    socketio.run(app, 
+                 host='0.0.0.0', 
+                 port=4000, 
+                 allow_unsafe_werkzeug=True,
+                 debug=True)
