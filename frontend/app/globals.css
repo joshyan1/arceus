@@ -9,6 +9,10 @@ body {
 
 body {
   font-family: var(--font-montreal);
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
 @layer utilities {
@@ -85,17 +89,27 @@ body {
   }
 }
 
+.dot-pulse {
+  animation: dot-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}
+
 @keyframes line-pulse {
   0% {
     background-position: 100% 0%;
     opacity: 0;
   }
-  25%,
-  85% {
+  25% {
     opacity: 1;
-  }
-  95% {
-    opacity: 0;
   }
   100% {
     background-position: -100% 0%;
@@ -112,8 +126,8 @@ body {
     rgba(255, 255, 255, 0.3) 15%,
     hsl(var(--muted)) 20%
   );
+  background-position: 100% 0%;
   background-size: 200% 100%;
-  opacity: 0;
 }
 
 @keyframes node-pulse-start {
@@ -144,14 +158,13 @@ body {
 }
 
 .nn-start-node {
-  opacity: 0;
+  background-color: hsl(var(--muted));
   animation:
     node-pulse-start 1.5s,
     nn-opacity 1.5s;
 }
 
 .nn-end-node {
-  opacity: 0;
   background-color: hsl(var(--muted));
   animation:
     node-pulse-end 1.5s,
@@ -164,7 +177,7 @@ body {
     opacity: 0;
   }
   25%,
-  90% {
+  100% {
     opacity: 1;
   }
 }
@@ -190,21 +203,21 @@ body {
 
 .dotted-pattern {
   background-image: radial-gradient(
-    rgba(255, 255, 255, 0.2) 1.5px,
+    rgba(255, 255, 255, 0.3) 1.5px,
     transparent 1.5px
   );
   background-size: 5px 5px;
   mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 6.5%,
-    transparent 6.8%
+    black 10%,
+    transparent 15%
   );
   -webkit-mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 6.5%,
-    transparent 6.8%
+    black 10%,
+    transparent 15%
   );
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
@@ -212,4 +225,66 @@ body {
   -webkit-mask-position: center;
   animation: ripple 1.5s linear;
   opacity: 0;
+}
+
+.ripple-cover {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    hsl(var(--card)) 30%,
+    hsl(var(--card)) 100%
+  );
+}
+
+@keyframes node-backprop-pulse {
+  0%,
+  50% {
+    background-color: hsl(var(--muted));
+  }
+  65% {
+    background-color: hsl(var(--primary));
+  }
+  100% {
+    background-color: hsl(var(--primary));
+  }
+}
+
+.nn-backprop-node {
+  animation:
+    node-backprop-pulse 1.5s linear,
+    nn-opacity 1.5s reverse linear;
+}
+
+.nn-backprop-line-pulse {
+  animation: line-pulse 1.5s reverse linear;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    rgba(234, 88, 12, 0.5) 5%,
+    rgba(234, 88, 12, 1) 10%,
+    rgba(234, 88, 12, 0.5) 15%,
+    hsl(var(--muted)) 20%
+  );
+  background-position: 100% 0%;
+  background-size: 200% 100%;
+}
+
+.gradient-button-bg {
+  background: radial-gradient(circle at top, #d6d3d1 0%, #292524 50%);
+}
+
+.gradient-button {
+  /* background: radial-gradient(
+    circle at bottom,
+    #262626 -10%,
+    hsl(0 0% 3.9%) 50%
+  );
+}
+
+.gradient-button-bg > div:hover { */
+  background: radial-gradient(
+    circle at bottom,
+    #292524 -10%,
+    hsl(var(--background)) 70%
+  );
 }

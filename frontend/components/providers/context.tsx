@@ -3,8 +3,8 @@
 import { createContext, useContext, useState } from "react";
 
 type ContextType = {
-  hoveredLayers: number[];
-  setHoveredLayers: (layers: number[]) => void;
+  hoveredDeviceId: number | null;
+  setHoveredDeviceId: (id: number | null) => void;
 };
 
 const AppContext = createContext<ContextType | undefined>(undefined);
@@ -14,10 +14,10 @@ export default function AppContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [hoveredLayers, setHoveredLayers] = useState<number[]>([]);
+  const [hoveredDeviceId, setHoveredDeviceId] = useState<number | null>(null);
 
   return (
-    <AppContext.Provider value={{ hoveredLayers, setHoveredLayers }}>
+    <AppContext.Provider value={{ hoveredDeviceId, setHoveredDeviceId }}>
       {children}
     </AppContext.Provider>
   );

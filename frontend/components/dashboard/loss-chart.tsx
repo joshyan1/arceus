@@ -85,6 +85,17 @@ export default function LossChart() {
             bottom: 4,
           }}
         >
+          <defs>
+            <filter id="glow" x="-100%" y="-100%" width="400%" height="400%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="10" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           <CartesianGrid vertical={false} />
           <ChartTooltip
             cursor={true}
@@ -120,8 +131,8 @@ export default function LossChart() {
                     r={8}
                     fill="hsl(var(--muted-foreground))"
                     opacity={0.5}
-                    filter="blur(8px)"
-                    className="animate-pulse"
+                    filter="url(#glow)"
+                    className="dot-pulse"
                   />
                 </>
               ) : (
@@ -150,8 +161,8 @@ export default function LossChart() {
                     cy={props.cy}
                     r={8}
                     fill="hsl(var(--primary))"
-                    filter="blur(8px)"
-                    className="animate-pulse"
+                    filter="url(#glow)"
+                    className="dot-pulse"
                   />
                 </>
               ) : (

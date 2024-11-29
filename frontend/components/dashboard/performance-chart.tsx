@@ -76,6 +76,17 @@ export default function PerformanceChart() {
             top: 12,
           }}
         >
+          <defs>
+            <filter id="glow" x="-100%" y="-100%" width="400%" height="400%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="10" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           <CartesianGrid vertical={false} />
           <ChartTooltip
             cursor={true}
@@ -114,8 +125,8 @@ export default function PerformanceChart() {
                     cy={props.cy}
                     r={8}
                     fill="var(--color-performance)"
-                    filter="blur(8px)"
-                    className="animate-pulse"
+                    filter="url(#glow)"
+                    className="dot-pulse"
                   />
                 </>
               ) : (

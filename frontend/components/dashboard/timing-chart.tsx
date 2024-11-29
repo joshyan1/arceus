@@ -55,11 +55,11 @@ const chartData = generateTimingData();
 const chartConfig = {
   forward: {
     label: "Forward Pass",
-    color: "hsl(20.5 90.2% 78.2%)",
+    color: "hsl(20.5 20.2% 58.2%)",
   },
   backward: {
     label: "Backward Pass",
-    color: "hsl(20.5 90.2% 68.2%)",
+    color: "hsl(20.5 50.2% 58.2%)",
   },
   params: {
     label: "Parameter Update",
@@ -119,6 +119,7 @@ export default function TimingChart() {
                 dataKey={key}
                 type="linear"
                 stackId="1"
+                // opacity={key === "forward" ? 0.75 : 1}
                 stroke={config.color}
                 fill={config.color}
                 isAnimationActive={false}
