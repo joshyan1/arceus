@@ -323,6 +323,19 @@ class DistributedNeuralNetwork:
                           f"Loss: {batch_loss:.4f} "
                           f"Acc: {batch_acc:.4f} "
                           f"Time: {batch_time:.2f}s")
+                    if self.message_queue:
+                        self.message_queue.put({
+                            'event': 'training_data',
+                            'data': {
+                                'epoch': epoch + 1,
+                                'epochs': epochs,
+                                'train_loss': float(epoch_loss),
+                                'train_acc': float(batch_acc), 
+                                'batch_idx': batch_idx + 1,
+                                'batch_time': batch_time
+                            },
+                            'room': self.job_id
+                        })
                     self.print_timing_stats(batch_idx + 1)
 
             # Accidentally deleted this validation loop
@@ -345,8 +358,6 @@ class DistributedNeuralNetwork:
                     val_acc += self.compute_accuracy(target, val_pred)
                     n_val_batches += 1
 
-                
-            
             val_loss /= n_val_batches
             val_acc /= n_val_batches
             epoch_time = time.time() - epoch_start
