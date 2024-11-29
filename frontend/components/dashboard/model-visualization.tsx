@@ -30,7 +30,7 @@ export default function ModelVisualization() {
   const [animationIndex, setAnimationIndex] = useState(1);
 
   useEffect(() => {
-    const CYCLE_DURATION = 2000; // 2 seconds per step
+    const CYCLE_DURATION = 1500;
     const RESET_PAUSE = 100; // Brief pause at 0
 
     const interval = setInterval(() => {
@@ -52,7 +52,7 @@ export default function ModelVisualization() {
       ref={containerRef}
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
     >
-      <div className="absolute">{animationIndex}</div>
+      {/* <div className="absolute">{animationIndex}</div> */}
       <div
         className={cn(
           "absolute -z-20 h-full w-[200%] overflow-visible opacity-75",
@@ -79,6 +79,7 @@ export default function ModelVisualization() {
           <Layer
             key={i}
             layer={i + 1}
+            numLayers={dimensions.length}
             dimension={dimension}
             spacing={layerSpacing}
             connections={
@@ -90,6 +91,7 @@ export default function ModelVisualization() {
             hovered={
               hoveredLayers.length === 0 || hoveredLayers.includes(i + 1)
             }
+            backpropagating={animationIndex === dimensions.length}
           />
         ))}
     </Card>
@@ -100,14 +102,18 @@ function Layer({
   layer,
   dimension,
   spacing,
+  numLayers,
   animationIndex,
+  backpropagating,
   connections,
   hovered,
 }: {
   layer: number;
   dimension: number;
   spacing: number;
+  numLayers: number;
   animationIndex: number;
+  backpropagating: boolean;
   connections?: { data: Connection[]; nextDimension: number };
   hovered: boolean;
 }) {
@@ -151,26 +157,46 @@ function Layer({
               return (
                 <Fragment key={index}>
                   <div
+                    key={backpropagating ? "backprop-start" : "forward-start"}
                     style={{
                       top: `${top.from * 100}%`,
                     }}
-                    className="nn-start-node nn-opacity absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className={cn(
+                      backpropagating ? "nn-backprop-node" : "nn-start-node",
+                      "absolute z-10 size-1.5 rounded-full",
+                    )}
                   />
                   <div
+                    key={backpropagating ? "backprop-line" : "forward-line"}
                     style={{
                       top: `${top.from * 100}%`,
                       width: `${lineLength}px`,
                       transformOrigin: "0 0",
                       transform: `rotate(${angle}rad) translateY(2px)`,
                     }}
-                    className="nn-line-pulse nn-opacity absolute left-5 h-px bg-foreground"
+                    className={cn(
+                      backpropagating
+                        ? "nn-backprop-line-pulse"
+                        : "nn-line-pulse",
+                      "absolute left-5 h-px",
+                    )}
                   />
                   <div
+                    key={
+                      backpropagating && layer < numLayers - 1
+                        ? "backprop-end"
+                        : "forward-end"
+                    }
                     style={{
                       top: `${top.to * 100}%`,
                       transform: `translateX(${spacing + 40}px)`,
                     }}
-                    className="nn-end-node nn-opacity absolute z-10 size-1.5 rounded-full bg-foreground"
+                    className={cn(
+                      backpropagating && layer < numLayers - 1
+                        ? "nn-backprop-node"
+                        : "nn-end-node",
+                      "absolute z-10 size-1.5 rounded-full",
+                    )}
                   />
                 </Fragment>
               );

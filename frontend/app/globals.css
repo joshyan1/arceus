@@ -221,3 +221,36 @@ body {
     hsl(var(--card)) 100%
   );
 }
+
+@keyframes node-backprop-pulse {
+  0%,
+  50% {
+    background-color: hsl(var(--muted));
+  }
+  65% {
+    background-color: hsl(var(--primary));
+  }
+  100% {
+    background-color: hsl(var(--primary));
+  }
+}
+
+.nn-backprop-node {
+  animation:
+    node-backprop-pulse 1.5s linear,
+    nn-opacity 1.5s reverse linear;
+}
+
+.nn-backprop-line-pulse {
+  animation: line-pulse 1.5s reverse linear;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    rgba(234, 88, 12, 0.5) 5%,
+    rgba(234, 88, 12, 1) 10%,
+    rgba(234, 88, 12, 0.5) 15%,
+    hsl(var(--muted)) 20%
+  );
+  background-position: 100% 0%;
+  background-size: 200% 100%;
+}
