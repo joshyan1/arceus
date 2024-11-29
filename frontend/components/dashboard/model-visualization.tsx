@@ -6,8 +6,9 @@ import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
 import { devices, you } from "@/lib/devices";
 
-const dimensions = [50, 50, 50, 50];
-const connections = generateConnections(dimensions);
+const dimensions = [50, 50, 50, 10];
+const displayDimensions = [784, 128, 64, 10];
+const initialConnections = generateConnections(dimensions);
 
 export default function ModelVisualization() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,6 +16,8 @@ export default function ModelVisualization() {
   const { hoveredDeviceId } = useAppContext();
   const hoveredLayers =
     [you, ...devices].find((d) => d.id === hoveredDeviceId)?.task || [];
+  const [connections, setConnections] =
+    useState<Connection[][]>(initialConnections);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -36,7 +39,10 @@ export default function ModelVisualization() {
       setAnimationIndex((prev) => {
         if (prev === dimensions.length) {
           // Schedule the reset after a brief pause
-          setTimeout(() => setAnimationIndex(1), RESET_PAUSE);
+          setTimeout(() => {
+            setConnections(generateConnections(dimensions));
+            setAnimationIndex(1);
+          }, RESET_PAUSE);
           return 0;
         }
         return prev + 1;
@@ -218,7 +224,9 @@ function Layer({
       </div>
       <div className="flex flex-col items-center border-t bg-muted/40 py-1 text-sm">
         <div>L{layer}</div>
-        <div className="text-muted-foreground">{dimension}</div>
+        <div className="text-muted-foreground">
+          {displayDimensions[layer - 1]}
+        </div>
       </div>
     </div>
   );
@@ -234,8 +242,11 @@ function generateConnections(dimensions: number[]): Connection[][] {
     const toDim = dimensions[layer + 1];
     const maxConnections = Math.min(fromDim, toDim);
 
-    // Random number of connections between 0 and maxConnections
-    const numConnections = Math.floor(Math.random() * (maxConnections + 1));
+    // Random number of connections between 1 and maxConnections
+    const numConnections = Math.max(
+      1,
+      Math.floor(Math.random() * maxConnections + 1),
+    );
 
     const layerConnections: Connection[] = [];
     for (let i = 0; i < numConnections; i++) {
