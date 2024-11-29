@@ -317,7 +317,7 @@ class DistributedNeuralNetwork:
                 
                 batch_time = time.time() - batch_start
                 
-                if (batch_idx + 1) % 50 == 0:
+                if (batch_idx + 1) % 10 == 0:
                     print(f"\rEpoch {epoch+1}/{epochs} "
                           f"[Batch {batch_idx+1}/{len(train_loader)}] "
                           f"Loss: {batch_loss:.4f} "
