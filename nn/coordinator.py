@@ -260,8 +260,6 @@ class DistributedNeuralNetwork:
             
             epoch_time = time.time() - epoch_start
             print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")
-            
-            # Rest of the training code remains the same...
         
         # Aggregate teraflops data after training
         self.aggregate_teraflops()
