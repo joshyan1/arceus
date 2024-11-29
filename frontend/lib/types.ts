@@ -24,9 +24,14 @@ export type TimingData = {
 export type EpochStats = {
   epoch: number;
   epochs: number;
+  val_loss: number;
+};
+
+export type TrainingData = {
+  epoch: number;
+  epochs: number;
   train_loss: number;
   train_acc: number;
-  val_loss: number;
-  val_acc: number;
-  epoch_time: number;
+  batch_idx: number;
+  batch_time: number;
 };
