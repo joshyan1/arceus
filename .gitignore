@@ -9,5 +9,3 @@ __pycache__/
 data/
 
 validation/metrics/
-
-.venv
