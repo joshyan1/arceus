@@ -4,26 +4,45 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 
-export default function Progress({ progress }: { progress: number }) {
+export default function Progress({
+  progress,
+  total,
+  startTime,
+}: {
+  progress: number;
+  total: number;
+  startTime: number;
+}) {
+  const elapsedTime = Date.now() - startTime;
+  const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+  const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+
   return (
     <Card className="flex flex-col p-4">
       <div className="mb-4 flex justify-between font-supply text-sm text-muted-foreground">
         <div>PROGRESS</div>
         <div className="flex items-center gap-2">
           <Clock className="size-3.5" />
-          2:15:32
+          {`${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`}
         </div>
       </div>
       <div className="mb-2 flex items-end justify-between">
         <div className="text-4xl font-medium">75%</div>
         <div className="text-lg text-muted-foreground">75/100 Epochs</div>
       </div>
-      <ProgressBar progress={progress} />
+      <ProgressBar progress={progress} total={total} />
     </Card>
   );
 }
 
-export function ProgressBar({ progress }: { progress: number }) {
+export function ProgressBar({
+  progress,
+  total,
+}: {
+  progress: number;
+  total: number;
+}) {
   const scaledProgress = Math.floor(progress / 2);
 
   return (

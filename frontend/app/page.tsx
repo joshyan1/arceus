@@ -13,12 +13,14 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TimingData } from "@/lib/types";
+import { EpochStats, TimingData } from "@/lib/types";
 
 export default function Home() {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
+  const [epochStats, setEpochStats] = useState<EpochStats[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isTraining, setIsTraining] = useState(false);
+  const [startTime, setStartTime] = useState(0);
 
   useEffect(() => {
     socket.connect();
@@ -48,6 +50,7 @@ export default function Home() {
       if (data.message === "Training started") {
         console.log("Training started");
         setIsTraining(true);
+        setStartTime(Date.now());
       } else {
         console.error("Training failed to start:", data.error);
       }
@@ -71,14 +74,21 @@ export default function Home() {
       console.log(value);
     }
 
+    function onEpochStatsEvent(value: any) {
+      setEpochStats((prev) => [...prev, value]);
+      console.log(value);
+    }
+
     socket.on("connect", onConnectEvent);
     socket.on("disconnect", onDisconnectEvent);
     socket.on("timing_stats", onTimingEvent);
+    socket.on("epoch_stats", onEpochStatsEvent);
 
     return () => {
       socket.off("connect", onConnectEvent);
       socket.off("disconnect", onDisconnectEvent);
       socket.off("timing_stats", onTimingEvent);
+      socket.off("epoch_stats", onEpochStatsEvent);
     };
   }, []);
 
@@ -90,7 +100,11 @@ export default function Home() {
         <>
           <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
             <div className="flex w-96 flex-col gap-4">
-              <Progress progress={75} />
+              <Progress
+                progress={epochStats[epochStats.length - 1].epoch}
+                total={epochStats[epochStats.length - 1].epochs}
+                startTime={startTime}
+              />
               <Earnings />
               <Compute />
               <Devices />
