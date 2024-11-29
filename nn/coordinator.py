@@ -19,6 +19,7 @@ class DistributedNeuralNetwork:
         self.layer_sizes = layer_sizes
         self.max_devices = len(layer_sizes) - 1
         self.device_connections = {}
+        self.device_layer_map = {}
         self.quantization_bits = quantization_bits
         self.job_id = 'training_room'  # Use a default room or pass it as a parameter
         self.message_queue = None
@@ -197,6 +198,7 @@ class DistributedNeuralNetwork:
             stub = self.device_connections[device_id]
             stub.Update(pb2.UpdateRequest(learning_rate=learning_rate))
         self.timing_stats['update_time'].append(time.time() - start_update)
+        
     
     def print_timing_stats(self, batch_idx):
         """Print timing statistics"""
@@ -246,20 +248,10 @@ class DistributedNeuralNetwork:
                 except Exception as e:
                     print(f"Error retrieving teraflops for device {device_id}: {e}")
 
-            # Calculate averages
-            if forward_totals:
-                avg_forward_tflop = sum(forward_totals) / len(forward_totals)
-            else:
-                avg_forward_tflop = 0
-
-            if backward_totals:
-                avg_backward_tflop = sum(backward_totals) / len(backward_totals)
-            else:
-                avg_backward_tflop = 0
-
-            # Print aggregated averages
-            # print(f"\nAggregated Forward TFLOPs Average: {avg_forward_tflop}")
-            # print(f"Aggregated Backward TFLOPs Average: {avg_backward_tflop}")
+            # UPDATE THIS LATER
+            device_specific_data = []
+            for device_id in self.device_connections.keys():
+                device_specific_data.append({'device_id': device_id, 'total_teraflops': self.teraflops_data[device_id]['total_tflops'], 'chip': 'M2'})
 
             # Instead of emitting directly, put the message in the queue
             if self.message_queue:
@@ -271,10 +263,7 @@ class DistributedNeuralNetwork:
                         'avg_update': avg_update,
                         'avg_comm': avg_comm,
                         'avg_prep': avg_prep,
-                        'total_computation': avg_forward + avg_backward + avg_update,
-                        'total_overhead': avg_comm + avg_prep,
-                        'avg_forward_tflops': avg_forward_tflop,
-                        'avg_backward_tflop': avg_backward_tflop,
+                        'device_data': device_specific_data,
                         'batch_idx': batch_idx
                     },
                     'room': self.job_id
@@ -420,16 +409,8 @@ class DistributedNeuralNetwork:
         if isinstance(y_pred, np.ndarray):
             y_pred = torch.from_numpy(y_pred).to(self.device)
             
-        # Create one-hot encoding for loss calculation
-        batch_size = y_true.shape[0]
-        y_onehot = torch.zeros(batch_size, y_pred.shape[1], device=self.device)
-        y_onehot.scatter_(1, y_true.unsqueeze(1), 1)
-        
-        # Compute cross entropy loss manually for numerical stability
-        epsilon = 1e-7
-        y_pred = torch.clamp(y_pred, epsilon, 1 - epsilon)
-        loss = -torch.sum(y_onehot * torch.log(y_pred)) / batch_size
-        return loss.item()
+        criterion = torch.nn.CrossEntropyLoss()
+        return criterion(y_pred, y_true).item()
 
     def compute_accuracy(self, y_true, y_pred):
         """Compute accuracy using PyTorch"""
