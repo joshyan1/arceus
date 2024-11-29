@@ -4,7 +4,7 @@ import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment } from "react";
 
 export default function ModelVisualization() {
-  const dimensions = [30, 20, 10];
+  const dimensions = [20, 20, 20];
   const connections = generateConnections(dimensions);
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -89,15 +89,13 @@ function Layer({
                 (spacing + 40) ** 2 + verticalDistance ** 2,
               );
 
-              console.log("angle", angle);
-
               return (
                 <Fragment key={index}>
                   <div
                     style={{
                       top: `${top.from * 100}%`,
                     }}
-                    className="absolute size-1.5 rounded-full bg-foreground"
+                    className="absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
                   <div
                     style={{
@@ -106,14 +104,14 @@ function Layer({
                       transformOrigin: "0 0",
                       transform: `rotate(${angle}rad) translateY(2px)`,
                     }}
-                    className="absolute left-5 h-px bg-foreground"
+                    className="nn-line-pulse absolute left-5 h-px bg-foreground"
                   />
                   <div
                     style={{
                       top: `${top.to * 100}%`,
                       transform: `translateX(${spacing + 40}px)`,
                     }}
-                    className="absolute size-1.5 rounded-full bg-foreground"
+                    className="absolute z-10 size-1.5 rounded-full bg-foreground"
                   />
                 </Fragment>
               );
