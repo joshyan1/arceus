@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Training Progress</title>
+    <!-- Use Socket.IO client version 3.x compatible with server version -->
+    <script src="https://cdn.socket.io/3.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #progress {
+            margin-top: 20px;
+        }
+        .entry {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Training Progress</h1>
+    <button id="start-training">Start Training</button>
+    <div id="progress"></div>
+
+    <script>
+        const jobId = '1'; // Replace with your actual job ID if needed
+
+        document.getElementById('start-training').addEventListener('click', () => {
+            // Disable the button to prevent multiple clicks
+            document.getElementById('start-training').disabled = true;
+
+            // Establish the socket connection
+            const socket = io('http://127.0.0.1:4000');
+
+            socket.on('connect', () => {
+                console.log('Connected to Socket.IO server');
+                // Join the room
+                socket.emit('join', { room: 'training_room' });
+
+                // Send the train request to the server after connecting
+                fetch(`http://127.0.0.1:4000/api/network/train/${jobId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'epochs': 10,
+                        'learning_rate': 0.1
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Training started') {
+                        console.log('Training started');
+                    } else {
+                        console.error('Training failed to start:', data.error);
+                        // Re-enable the button if training failed
+                        document.getElementById('start-training').disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error starting training:', error);
+                    // Re-enable the button in case of error
+                    document.getElementById('start-training').disabled = false;
+                });
+            });
+
+            socket.on('timing_stats', (data) => {
+                console.log(data);
+                const progressDiv = document.getElementById('progress');
+                progressDiv.innerHTML += `
+                    <div class="entry">
+                        <h3>Batch ${data.batch_idx}</h3>
+                        <p>
+                            <strong>Forward Pass:</strong> ${data.avg_forward.toFixed(4)}s<br>
+                            <strong>Backward Pass:</strong> ${data.avg_backward.toFixed(4)}s<br>
+                            <strong>Parameter Update:</strong> ${data.avg_update.toFixed(4)}s<br>
+                            <strong>Communication Overhead:</strong> ${data.avg_comm.toFixed(4)}s<br>
+                            <strong>Data Preparation:</strong> ${data.avg_prep.toFixed(4)}s<br>
+                            <strong>Total Computation:</strong> ${data.total_computation.toFixed(4)}s<br>
+                            <strong>Total Overhead:</strong> ${data.total_overhead.toFixed(4)}s
+                        </p>
+                    </div>
+                `;
+            });
+
+            // Handle disconnection
+            socket.on('disconnect', () => {
+                console.log('Disconnected from Socket.IO server');
+            });
+        });
+    </script>
+</body>
+</html>

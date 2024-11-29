@@ -20,6 +20,9 @@ class DistributedNeuralNetwork:
         self.max_devices = len(layer_sizes) - 1
         self.device_connections = {}
         self.quantization_bits = quantization_bits
+        self.job_id = 'training_room'  # Use a default room or pass it as a parameter
+        self.message_queue = None
+
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         self.timing_stats = {
             'forward_time': [],
@@ -214,7 +217,71 @@ class DistributedNeuralNetwork:
             print(f"Total overhead: {avg_comm + avg_prep:.4f}s")
             print("-" * 50)
 
-    def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
+            print("Sending timing stats to frontend")
+
+            # Assuming this is part of your existing method in coordinator.py
+            self.teraflops_data = {}
+            forward_totals = []
+            backward_totals = []
+
+            for device_id, stub in self.device_connections.items():
+                try:
+                    request = pb2.TeraflopsRequest(device_id=device_id)
+                    response = stub.GetTeraflops(request)
+                    
+                    # Store the individual device data
+                    self.teraflops_data[device_id] = {
+                        'forward_tflops': response.forward_tflops,
+                        'backward_tflops': response.backward_tflops,
+                        'total_tflops': response.forward_tflops + response.backward_tflops
+                    }
+                    
+                    # Print individual device data
+                    print(f"Device {device_id} - Forward TFLOPs: {response.forward_tflops}, Backward TFLOPs: {response.backward_tflops}")
+                    
+                    # Accumulate totals for averaging
+                    forward_totals.append(response.forward_tflops)
+                    backward_totals.append(response.backward_tflops)
+
+                except Exception as e:
+                    print(f"Error retrieving teraflops for device {device_id}: {e}")
+
+            # Calculate averages
+            if forward_totals:
+                avg_forward_tflop = sum(forward_totals) / len(forward_totals)
+            else:
+                avg_forward_tflop = 0
+
+            if backward_totals:
+                avg_backward_tflop = sum(backward_totals) / len(backward_totals)
+            else:
+                avg_backward_tflop = 0
+
+            # Print aggregated averages
+            # print(f"\nAggregated Forward TFLOPs Average: {avg_forward_tflop}")
+            # print(f"Aggregated Backward TFLOPs Average: {avg_backward_tflop}")
+
+            # Instead of emitting directly, put the message in the queue
+            if self.message_queue:
+                self.message_queue.put({
+                    'event': 'timing_stats',
+                    'data': {
+                        'avg_forward': avg_forward,
+                        'avg_backward': avg_backward,
+                        'avg_update': avg_update,
+                        'avg_comm': avg_comm,
+                        'avg_prep': avg_prep,
+                        'total_computation': avg_forward + avg_backward + avg_update,
+                        'total_overhead': avg_comm + avg_prep,
+                        'avg_forward_tflops': avg_forward_tflop,
+                        'avg_backward_tflop': avg_backward_tflop,
+                        'batch_idx': batch_idx
+                    },
+                    'room': self.job_id
+                })
+
+    def train(self, train_loader, message_queue, val_loader, epochs=10, learning_rate=0.1):
+        self.message_queue = message_queue
         print("\nStarting distributed training across devices...")
         print(f"Learning rate: {learning_rate}")
         print(f"Quantization bits: {self.quantization_bits}")
