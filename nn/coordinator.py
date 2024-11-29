@@ -106,7 +106,9 @@ class DistributedNeuralNetwork:
     def forward(self, X):
         """Distributed forward pass with timing and activation tracking"""
         if isinstance(X, np.ndarray):
-            X = torch.from_numpy(X).to(self.device)
+            X = torch.from_numpy(X.copy()).to(self.device)
+        else:
+            X = X.to(self.device)
         
         start_prep = time.time()
         A = X
@@ -122,7 +124,7 @@ class DistributedNeuralNetwork:
             
             # Convert to numpy for gRPC transfer
             start_comm = time.time()
-            A_numpy = A.detach().cpu().numpy()
+            A_numpy = A.detach().cpu().numpy().copy()
             forward_request = pb2.ForwardRequest(
                 input_data=A_numpy.tobytes(),
                 input_shape=list(A_numpy.shape)
@@ -136,9 +138,8 @@ class DistributedNeuralNetwork:
             
             # Convert back to PyTorch tensor
             start_comm = time.time()
-            A = torch.from_numpy(
-                np.frombuffer(response.output_data, dtype=np.float32).reshape(response.output_shape)
-            ).to(self.device)
+            output_array = np.frombuffer(response.output_data, dtype=np.float32).reshape(response.output_shape).copy()
+            A = torch.from_numpy(output_array).to(self.device)
             activations.append(A)
             comm_time += time.time() - start_comm
             
@@ -152,7 +153,7 @@ class DistributedNeuralNetwork:
         activation_data = {
             'epoch': self.current_epoch,
             'batch': self.current_batch,
-            'activations': [act.detach().cpu().numpy().tolist() for act in activations]
+            'activations': [act.detach().cpu().numpy().copy().tolist() for act in activations]
         }
         training_namespace.emit_activation_update(activation_data)
         
@@ -162,7 +163,9 @@ class DistributedNeuralNetwork:
         """Distributed backward pass with timing"""
         start_prep = time.time()
         if isinstance(y_true, np.ndarray):
-            y_true = torch.from_numpy(y_true).to(self.device)
+            y_true = torch.from_numpy(y_true.copy()).to(self.device)
+        else:
+            y_true = y_true.to(self.device)
         
         # Create one-hot encoding using PyTorch
         batch_size = y_true.shape[0]
@@ -180,7 +183,7 @@ class DistributedNeuralNetwork:
             
             # Convert to numpy for gRPC transfer
             start_comm = time.time()
-            dA_numpy = dA.detach().cpu().numpy()
+            dA_numpy = dA.detach().cpu().numpy().copy()
             backward_request = pb2.BackwardRequest(
                 grad_data=dA_numpy.tobytes(),
                 grad_shape=list(dA_numpy.shape)
@@ -193,9 +196,8 @@ class DistributedNeuralNetwork:
             
             # Convert back to PyTorch tensor
             start_comm = time.time()
-            dA = torch.from_numpy(
-                np.frombuffer(response.grad_output_data, dtype=np.float32).reshape(response.grad_shape)
-            ).to(self.device)
+            grad_array = np.frombuffer(response.grad_output_data, dtype=np.float32).reshape(response.grad_shape).copy()
+            dA = torch.from_numpy(grad_array).to(self.device)
             comm_time += time.time() - start_comm
             
             total_backward_time += backward_time
@@ -232,6 +234,7 @@ class DistributedNeuralNetwork:
             print("-" * 50)
 
     def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
+        """Training loop with proper device handling"""
         self.total_epochs = epochs
         self.total_batches = len(train_loader)
         
@@ -252,6 +255,10 @@ class DistributedNeuralNetwork:
             for batch_idx, (data, target) in enumerate(train_loader):
                 self.current_batch = batch_idx + 1
                 batch_start = time.time()
+                
+                # Move data to device
+                data = data.to(self.device)
+                target = target.to(self.device)
                 
                 # Forward pass
                 activations = self.forward(data)
@@ -344,19 +351,27 @@ class DistributedNeuralNetwork:
     def compute_loss(self, y_true, y_pred):
         """Compute cross entropy loss using PyTorch"""
         if isinstance(y_true, np.ndarray):
-            y_true = torch.from_numpy(y_true).to(self.device)
+            y_true = torch.from_numpy(y_true.copy()).to(self.device)
         if isinstance(y_pred, np.ndarray):
-            y_pred = torch.from_numpy(y_pred).to(self.device)
+            y_pred = torch.from_numpy(y_pred.copy()).to(self.device)
             
-        criterion = torch.nn.CrossEntropyLoss()
+        # Ensure tensors are on the correct device
+        y_true = y_true.to(self.device)
+        y_pred = y_pred.to(self.device)
+            
+        criterion = torch.nn.CrossEntropyLoss().to(self.device)
         return criterion(y_pred, y_true).item()
 
     def compute_accuracy(self, y_true, y_pred):
         """Compute accuracy using PyTorch"""
         if isinstance(y_true, np.ndarray):
-            y_true = torch.from_numpy(y_true).to(self.device)
+            y_true = torch.from_numpy(y_true.copy()).to(self.device)
         if isinstance(y_pred, np.ndarray):
-            y_pred = torch.from_numpy(y_pred).to(self.device)
+            y_pred = torch.from_numpy(y_pred.copy()).to(self.device)
+            
+        # Ensure tensors are on the correct device    
+        y_true = y_true.to(self.device)
+        y_pred = y_pred.to(self.device)
             
         predictions = torch.argmax(y_pred, dim=1)
         return (predictions == y_true).float().mean().item()
