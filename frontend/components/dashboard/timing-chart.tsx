@@ -41,6 +41,15 @@ export default function TimingChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(200);
 
+  const processedData = timingData.slice(-100).map((data) => ({
+    ...data,
+    avg_forward: data.avg_forward * 1000,
+    avg_backward: data.avg_backward * 1000,
+    avg_update: data.avg_update * 1000,
+    avg_comm: data.avg_comm * 1000,
+    avg_prep: data.avg_prep * 1000,
+  }));
+
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
@@ -57,7 +66,7 @@ export default function TimingChart({
     <div ref={containerRef} className="h-full">
       <ChartContainer config={chartConfig} height={height}>
         <AreaChart
-          data={timingData}
+          data={processedData}
           margin={{ left: 4, right: 4, top: 12, bottom: 4 }}
         >
           <CartesianGrid vertical={false} />
