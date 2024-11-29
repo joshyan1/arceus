@@ -80,7 +80,6 @@ export default function Home() {
 
     function onEpochStatsEvent(value: any) {
       setEpochStats((prev) => [...prev, value]);
-      console.log(value);
       if (!isTraining) {
         setIsTraining(true);
       }
@@ -88,7 +87,6 @@ export default function Home() {
 
     function onTrainingDataEvent(value: any) {
       setTrainingData((prev) => [...prev, value]);
-      console.log(value);
       if (!isTraining) {
         setIsTraining(true);
       }
@@ -117,31 +115,32 @@ export default function Home() {
     timingData.length > 0 ? timingData[timingData.length - 1].batch_idx : 0;
   const batchSize = 256;
 
+  const progressPercentage = Math.min(
+    ((epoch * batchSize + batch) / (totalEpochs * batchSize)) * 100,
+    100,
+  );
+
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
-      <div>TIMING: {timingData.length}</div>
-      <div>EPOCH: {epochStats.length}</div>
-      <div>TRAINING: {trainingData.length}</div>
       {isTraining ? (
         <>
           <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
             <div className="flex w-96 flex-col gap-4">
               <Progress
-                progress={epoch}
-                batch={batch}
-                batchSize={batchSize}
-                total={totalEpochs}
+                epoch={epoch}
+                totalEpochs={totalEpochs}
                 startTime={startTime}
+                progressPercentage={progressPercentage}
               />
-              <Earnings />
+              {/* <Earnings /> */}
               <Compute />
               <Devices />
             </div>
             <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
               <Loss epochStats={epochStats} trainingData={trainingData} />
               <Timing timingData={timingData} epoch={epoch} />
-              <ModelVisualization />
+              <ModelVisualization pause={progressPercentage >= 100} />
             </div>
           </div>
         </>

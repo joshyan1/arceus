@@ -10,7 +10,11 @@ const dimensions = [50, 50, 50, 10];
 const displayDimensions = [784, 128, 64, 10];
 const initialConnections = generateConnections(dimensions);
 
-export default function ModelVisualization() {
+export default function ModelVisualization({
+  pause = false,
+}: {
+  pause: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
   const { hoveredDeviceId } = useAppContext();

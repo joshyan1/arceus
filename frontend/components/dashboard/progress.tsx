@@ -5,27 +5,20 @@ import { Card } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 
 export default function Progress({
-  progress,
-  total,
+  epoch,
+  totalEpochs,
   startTime,
-  batch,
-  batchSize,
+  progressPercentage,
 }: {
-  progress: number;
-  total: number;
+  epoch: number;
+  totalEpochs: number;
   startTime: number;
-  batch: number;
-  batchSize: number;
+  progressPercentage: number;
 }) {
   const elapsedTime = Date.now() - startTime;
   const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
   const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
-
-  const progressPercentage = Math.min(
-    ((progress * batchSize + batch) / (total * batchSize)) * 100,
-    100,
-  );
 
   return (
     <Card className="flex flex-col p-4">
@@ -41,8 +34,7 @@ export default function Progress({
           {progressPercentage.toFixed(2)}%
         </div>
         <div className="text-lg text-muted-foreground">
-          {progress}/{total} Epochs
-          {/* {batchProgress} */}
+          {epoch}/{totalEpochs} Epochs
         </div>
       </div>
       <ProgressBar progress={progressPercentage} total={100} />
