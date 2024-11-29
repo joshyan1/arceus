@@ -112,7 +112,10 @@ export default function Home() {
   const epoch =
     epochStats.length > 0 ? epochStats[epochStats.length - 1].epoch : 0;
   const totalEpochs =
-    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 0;
+    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 10;
+  const batch =
+    timingData.length > 0 ? timingData[timingData.length - 1].batch_idx : 0;
+  const batchSize = 256;
 
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
@@ -126,6 +129,8 @@ export default function Home() {
             <div className="flex w-96 flex-col gap-4">
               <Progress
                 progress={epoch}
+                batch={batch}
+                batchSize={batchSize}
                 total={totalEpochs}
                 startTime={startTime}
               />

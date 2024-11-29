@@ -8,15 +8,22 @@ export default function Progress({
   progress,
   total,
   startTime,
+  batch,
+  batchSize,
 }: {
   progress: number;
   total: number;
   startTime: number;
+  batch: number;
+  batchSize: number;
 }) {
   const elapsedTime = Date.now() - startTime;
   const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
   const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+
+  const batchProgress = ((batch / batchSize) * 100) / total;
+  const progressPercentage = (progress / total) * 100 + batchProgress;
 
   return (
     <Card className="flex flex-col p-4">
@@ -28,12 +35,15 @@ export default function Progress({
         </div>
       </div>
       <div className="mb-2 flex items-end justify-between">
-        <div className="text-4xl font-medium">{(progress / total) * 100}%</div>
+        <div className="text-4xl font-medium">
+          {progressPercentage.toFixed(2)}%
+        </div>
         <div className="text-lg text-muted-foreground">
           {progress}/{total} Epochs
+          {/* {batchProgress} */}
         </div>
       </div>
-      <ProgressBar progress={progress} total={total} />
+      <ProgressBar progress={progressPercentage} total={100} />
     </Card>
   );
 }

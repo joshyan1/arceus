@@ -22,7 +22,7 @@ export default function Loss({
         <div>LOSS</div>
         <div className="flex items-center gap-2">
           <Check className="size-3.5" />
-          ACCURACY: {latestAccuracy}%
+          ACCURACY: {Number(latestAccuracy) * 100}%
         </div>
       </div>
       <LossChart epochStats={epochStats} trainingData={trainingData} />

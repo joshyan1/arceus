@@ -57,6 +57,16 @@ export default function LossChart({
     };
   });
 
+  // Find the last valid validation point
+  const lastValidationIndex =
+    chartData
+      .map((point, index) => ({
+        hasValidation: point.validation !== null,
+        index,
+      }))
+      .reverse()
+      .find((item) => item.hasValidation)?.index ?? -1;
+
   return (
     <div ref={containerRef} className="h-full">
       <ChartContainer config={chartConfig} height={height}>
@@ -99,8 +109,8 @@ export default function LossChart({
             stroke="hsl(var(--muted-foreground))"
             strokeWidth={1.5}
             dot={(props) => {
-              const isLast = props.index === chartData.length - 1;
-              return isLast ? (
+              const isLastValidation = props.index === lastValidationIndex;
+              return isLastValidation ? (
                 <>
                   <circle
                     cx={props.cx}
