@@ -94,12 +94,8 @@ body {
     background-position: 100% 0%;
     opacity: 0;
   }
-  25%,
-  85% {
+  25% {
     opacity: 1;
-  }
-  95% {
-    opacity: 0;
   }
   100% {
     background-position: -100% 0%;
@@ -116,8 +112,8 @@ body {
     rgba(255, 255, 255, 0.3) 15%,
     hsl(var(--muted)) 20%
   );
+  background-position: 100% 0%;
   background-size: 200% 100%;
-  opacity: 0;
 }
 
 @keyframes node-pulse-start {
@@ -148,14 +144,13 @@ body {
 }
 
 .nn-start-node {
-  opacity: 0;
+  background-color: hsl(var(--muted));
   animation:
     node-pulse-start 1.5s,
     nn-opacity 1.5s;
 }
 
 .nn-end-node {
-  opacity: 0;
   background-color: hsl(var(--muted));
   animation:
     node-pulse-end 1.5s,
@@ -168,7 +163,7 @@ body {
     opacity: 0;
   }
   25%,
-  90% {
+  100% {
     opacity: 1;
   }
 }

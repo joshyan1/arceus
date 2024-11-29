@@ -30,9 +30,20 @@ export default function ModelVisualization() {
   const [animationIndex, setAnimationIndex] = useState(1);
 
   useEffect(() => {
+    const CYCLE_DURATION = 2000; // 2 seconds per step
+    const RESET_PAUSE = 100; // Brief pause at 0
+
     const interval = setInterval(() => {
-      setAnimationIndex((prev) => (prev % dimensions.length) + 1);
-    }, 2000);
+      setAnimationIndex((prev) => {
+        if (prev === dimensions.length) {
+          // Schedule the reset after a brief pause
+          setTimeout(() => setAnimationIndex(1), RESET_PAUSE);
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, CYCLE_DURATION);
+
     return () => clearInterval(interval);
   }, [dimensions.length]);
 
@@ -41,6 +52,7 @@ export default function ModelVisualization() {
       ref={containerRef}
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
     >
+      <div className="absolute">{animationIndex}</div>
       <div
         className={cn(
           "absolute -z-20 h-full w-[200%] overflow-visible opacity-75",
@@ -118,7 +130,7 @@ function Layer({
         <div
           className={cn(
             "relative h-full w-full justify-center",
-            animationIndex === layer ? "flex" : "hidden",
+            animationIndex >= layer ? "flex" : "hidden",
           )}
           ref={lineContainerRef}
         >
