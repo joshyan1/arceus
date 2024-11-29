@@ -69,7 +69,13 @@ message UpdateRequest {
 }
 
 message UpdateResponse {
-  string status = 1;
+    string status = 1;
+    float avg_forward = 2;
+    float avg_backward = 3;
+    float avg_transfer = 4;
+    float avg_update = 5;
+    float avg_forward_tflops = 6;
+    float avg_backward_tflops = 7;
 }
 
 // Health check/ping messages

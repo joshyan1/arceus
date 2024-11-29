@@ -8,6 +8,11 @@ import time
 from protos import device_service_pb2 as pb2
 from protos import device_service_pb2_grpc as pb2_grpc
 from threading import Lock
+import sys, os
+
+# Add the ../api/ directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../api')))
+from socket_instance import socketio
 
 
 # Global variable to store previous training sessions' teraflops data
@@ -213,6 +218,18 @@ class DistributedNeuralNetwork:
             print(f"Total computation: {avg_forward + avg_backward + avg_update:.4f}s")
             print(f"Total overhead: {avg_comm + avg_prep:.4f}s")
             print("-" * 50)
+
+            # Emit the timing stats via SocketIO
+            socketio.emit('timing_stats', {
+                'avg_forward': avg_forward,
+                'avg_backward': avg_backward,
+                'avg_update': avg_update,
+                'avg_comm': avg_comm,
+                'avg_prep': avg_prep,
+                'total_computation': avg_forward + avg_backward + avg_update,
+                'total_overhead': avg_comm + avg_prep,
+                'batch_idx': batch_idx
+            })
 
     def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
         print("\nStarting distributed training across devices...")

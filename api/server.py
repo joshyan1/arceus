@@ -8,7 +8,14 @@ from torchvision import datasets, transforms
 import json
 import numpy as np
 
+from socket_instance import socketio
+from flask_socketio import SocketIO
+from flask_cors import CORS
+
+
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+socketio.init_app(app)
 
 # Global state
 coordinator = None
@@ -259,8 +266,8 @@ def create_app():
     """Create and configure the Flask app"""
     # Ensure the data directory exists
     os.makedirs('data', exist_ok=True)
-    return app
+    return app, socketio
 
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=4000)
+    app, socketio = create_app()
+    socketio.run(app, host='0.0.0.0', port=4000)
