@@ -7,8 +7,15 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import json
 import numpy as np
+from api.socket import socketio
 
+# Create Flask app
 app = Flask(__name__)
+# Initialize SocketIO with the Flask app
+socketio.init_app(app)
+
+# Ensure the data directory exists
+os.makedirs('data', exist_ok=True)
 
 # Global state
 coordinator = None
@@ -255,12 +262,5 @@ def get_previous_teraflops():
         print(f"Previous training sessions: {previous_training_sessions}")  # Log the previous sessions
         return jsonify(previous_training_sessions), 200
 
-def create_app():
-    """Create and configure the Flask app"""
-    # Ensure the data directory exists
-    os.makedirs('data', exist_ok=True)
-    return app
-
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=4000)
+    socketio.run(app, host='0.0.0.0', port=4000, allow_unsafe_werkzeug=True)

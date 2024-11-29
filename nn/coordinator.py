@@ -8,6 +8,8 @@ import time
 from protos import device_service_pb2 as pb2
 from protos import device_service_pb2_grpc as pb2_grpc
 from threading import Lock
+from api.socket import training_namespace
+import json
 
 
 # Global variable to store previous training sessions' teraflops data
@@ -30,6 +32,12 @@ class DistributedNeuralNetwork:
         }
         print(f"Using device: {self.device}")
         print(f"Maximum number of devices: {self.max_devices}")
+        
+        # Add tracking for current epoch/batch
+        self.current_epoch = 0
+        self.current_batch = 0
+        self.total_epochs = 0
+        self.total_batches = 0
     
     def connect_to_device(self, ip, port):
         """Connect to a device using gRPC"""
@@ -96,7 +104,7 @@ class DistributedNeuralNetwork:
         print("\nLayer distribution complete")
     
     def forward(self, X):
-        """Distributed forward pass with timing"""
+        """Distributed forward pass with timing and activation tracking"""
         if isinstance(X, np.ndarray):
             X = torch.from_numpy(X).to(self.device)
         
@@ -139,6 +147,15 @@ class DistributedNeuralNetwork:
         
         self.timing_stats['forward_time'].append(total_forward_time)
         self.timing_stats['communication_time'].append(total_comm_time)
+        
+        # Emit activation updates for visualization
+        activation_data = {
+            'epoch': self.current_epoch,
+            'batch': self.current_batch,
+            'activations': [act.detach().cpu().numpy().tolist() for act in activations]
+        }
+        training_namespace.emit_activation_update(activation_data)
+        
         return activations
     
     def backward(self, activations, y_true):
@@ -215,6 +232,9 @@ class DistributedNeuralNetwork:
             print("-" * 50)
 
     def train(self, train_loader, val_loader, epochs=10, learning_rate=0.1):
+        self.total_epochs = epochs
+        self.total_batches = len(train_loader)
+        
         print("\nStarting distributed training across devices...")
         print(f"Learning rate: {learning_rate}")
         print(f"Quantization bits: {self.quantization_bits}")
@@ -222,6 +242,7 @@ class DistributedNeuralNetwork:
         print("-" * 100)
         
         for epoch in range(epochs):
+            self.current_epoch = epoch + 1
             epoch_start = time.time()
             epoch_loss = 0
             epoch_acc = 0
@@ -229,9 +250,8 @@ class DistributedNeuralNetwork:
             
             # Training loop
             for batch_idx, (data, target) in enumerate(train_loader):
+                self.current_batch = batch_idx + 1
                 batch_start = time.time()
-                data = data.to(self.device)
-                target = target.to(self.device)
                 
                 # Forward pass
                 activations = self.forward(data)
@@ -240,28 +260,60 @@ class DistributedNeuralNetwork:
                 batch_loss = self.compute_loss(target, y_pred)
                 batch_acc = self.compute_accuracy(target, y_pred)
                 
-                epoch_loss += batch_loss
-                epoch_acc += batch_acc
-                n_batches += 1
+                # Emit training update
+                training_update = {
+                    'epoch': self.current_epoch,
+                    'total_epochs': self.total_epochs,
+                    'batch': self.current_batch,
+                    'total_batches': self.total_batches,
+                    'loss': float(batch_loss),
+                    'accuracy': float(batch_acc),
+                    'learning_rate': learning_rate,
+                    'timing': {
+                        'forward': self.timing_stats['forward_time'][-1],
+                        'backward': self.timing_stats['backward_time'][-1] if self.timing_stats['backward_time'] else 0,
+                        'update': self.timing_stats['update_time'][-1] if self.timing_stats['update_time'] else 0,
+                        'communication': self.timing_stats['communication_time'][-1],
+                        'data_prep': self.timing_stats['data_prep_time'][-1]
+                    }
+                }
+                training_namespace.emit_training_update(training_update)
                 
                 # Backward pass and update
                 self.backward(activations, target)
                 self.update_parameters(learning_rate)
                 
-                batch_time = time.time() - batch_start
+                # Collect teraflops data
+                self.aggregate_teraflops()
+                teraflops_data = {
+                    'epoch': self.current_epoch,
+                    'batch': self.current_batch,
+                    'devices': self.teraflops_data
+                }
+                training_namespace.emit_teraflops_update(teraflops_data)
                 
-                if (batch_idx + 1) % 10 == 0:
-                    print(f"\rEpoch {epoch+1}/{epochs} "
-                          f"[Batch {batch_idx+1}/{len(train_loader)}] "
-                          f"Loss: {batch_loss:.4f} "
-                          f"Acc: {batch_acc:.4f} "
-                          f"Time: {batch_time:.2f}s")
-                    self.print_timing_stats(batch_idx + 1)
-            
-            epoch_time = time.time() - epoch_start
-            print(f"\nEpoch {epoch+1} completed in {epoch_time:.2f}s")
-            
-            # Rest of the training code remains the same...
+                # Emit batch completion
+                batch_data = {
+                    'epoch': self.current_epoch,
+                    'batch': self.current_batch,
+                    'loss': float(batch_loss),
+                    'accuracy': float(batch_acc),
+                    'time': time.time() - batch_start
+                }
+                training_namespace.emit_batch_complete(batch_data)
+                
+                epoch_loss += batch_loss
+                epoch_acc += batch_acc
+                n_batches += 1
+                
+            # Emit epoch completion
+            epoch_data = {
+                'epoch': self.current_epoch,
+                'loss': float(epoch_loss / n_batches),
+                'accuracy': float(epoch_acc / n_batches),
+                'time': time.time() - epoch_start
+            }
+            training_namespace.emit_epoch_complete(epoch_data)
         
         # Aggregate teraflops data after training
         self.aggregate_teraflops()
