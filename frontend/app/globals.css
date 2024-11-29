@@ -105,7 +105,7 @@ body {
 
 @keyframes line-pulse {
   0% {
-    background-position: 100% 0%;
+    background-position: 40% 0%;
     opacity: 0;
   }
   25% {
@@ -117,7 +117,7 @@ body {
 }
 
 .nn-line-pulse {
-  animation: line-pulse 1.5s linear;
+  animation: line-pulse 1s linear;
   background: linear-gradient(
     90deg,
     hsl(var(--muted)) 0%,
@@ -132,13 +132,13 @@ body {
 
 @keyframes node-pulse-start {
   0%,
-  25% {
+  5% {
     background-color: hsl(var(--muted));
   }
-  40% {
+  20% {
     background-color: hsl(var(--foreground));
   }
-  55%,
+  35%,
   100% {
     background-color: hsl(var(--muted));
   }
@@ -160,15 +160,15 @@ body {
 .nn-start-node {
   background-color: hsl(var(--muted));
   animation:
-    node-pulse-start 1.5s,
-    nn-opacity 1.5s;
+    node-pulse-start 1s,
+    nn-opacity 1s;
 }
 
 .nn-end-node {
   background-color: hsl(var(--muted));
   animation:
-    node-pulse-end 1.5s,
-    nn-opacity 1.5s;
+    node-pulse-end 1s,
+    nn-opacity 1s;
 }
 
 @keyframes nn-opacity {
@@ -196,8 +196,8 @@ body {
   }
   100% {
     opacity: 0;
-    mask-size: 1700% 1700%;
-    -webkit-mask-size: 1700% 1700%;
+    mask-size: 1200% 1200%;
+    -webkit-mask-size: 1200% 1200%;
   }
 }
 
@@ -210,20 +210,20 @@ body {
   mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 10%,
-    transparent 15%
+    black 15%,
+    transparent 25%
   );
   -webkit-mask-image: radial-gradient(
     circle at center,
     transparent 5%,
-    black 10%,
-    transparent 15%
+    black 15%,
+    transparent 25%
   );
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   mask-position: center;
   -webkit-mask-position: center;
-  animation: ripple 1.5s linear;
+  animation: ripple 1s linear;
   opacity: 0;
 }
 
@@ -251,12 +251,12 @@ body {
 
 .nn-backprop-node {
   animation:
-    node-backprop-pulse 1.5s linear,
-    nn-opacity 1.5s reverse linear;
+    node-backprop-pulse 1s linear,
+    nn-opacity 1s reverse linear;
 }
 
 .nn-backprop-line-pulse {
-  animation: line-pulse 1.5s reverse linear;
+  animation: line-pulse 1s reverse linear;
   background: linear-gradient(
     90deg,
     hsl(var(--muted)) 0%,

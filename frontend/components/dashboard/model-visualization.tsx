@@ -9,8 +9,6 @@ import { devices, you } from "@/lib/devices";
 const dimensions = [40, 40, 40, 40, 40, 40];
 const connections = generateConnections(dimensions);
 
-console.log(connections);
-
 export default function ModelVisualization() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
@@ -25,17 +23,13 @@ export default function ModelVisualization() {
     const spacing =
       (totalWidth - dimensions.length * 40) / (dimensions.length + 1);
 
-    console.log("totalWidth", totalWidth);
-    console.log("numGaps", numGaps);
-    console.log("spacing", spacing);
-
     setLayerSpacing(spacing);
   }, [dimensions.length]);
 
   const [animationIndex, setAnimationIndex] = useState(1);
 
   useEffect(() => {
-    const CYCLE_DURATION = 1500;
+    const CYCLE_DURATION = 1000;
     const RESET_PAUSE = 100; // Brief pause at 0
 
     const interval = setInterval(() => {
@@ -60,7 +54,7 @@ export default function ModelVisualization() {
       {/* <div className="absolute">{animationIndex}</div> */}
       <div
         className={cn(
-          "absolute -z-20 h-full w-[200%] overflow-visible opacity-75",
+          "absolute -z-20 h-full w-[200%] overflow-visible opacity-25",
           animationIndex === dimensions.length ? "flex" : "hidden",
         )}
       >
@@ -172,21 +166,6 @@ function Layer({
               const lineLength = Math.sqrt(
                 (spacing + 40) ** 2 + verticalDistance ** 2,
               );
-
-              if (layer === 3) {
-                console.log({
-                  from,
-                  dimension,
-                  to,
-                  nextDimension: connections.nextDimension,
-                  top,
-                  verticalDistance,
-                  angle,
-                  lineLength,
-                  spacing,
-                  lineContainerHeight,
-                });
-              }
 
               return (
                 <Fragment key={index}>
