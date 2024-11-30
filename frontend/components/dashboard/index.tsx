@@ -110,7 +110,7 @@ export default function Dashboard({ id }: { id: string }) {
   const epoch =
     epochStats.length > 0 ? epochStats[epochStats.length - 1].epoch : 0;
   const totalEpochs =
-    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 10;
+    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 0;
   const batch =
     timingData.length > 0 ? timingData[timingData.length - 1].batch_idx : 0;
   const batchSize = 256;

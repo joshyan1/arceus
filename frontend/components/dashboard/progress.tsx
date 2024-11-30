@@ -19,6 +19,7 @@ export default function Progress({
   const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
   const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+  const timeString = `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   return (
     <Card className="flex flex-col p-4">
@@ -26,15 +27,15 @@ export default function Progress({
         <div>PROGRESS</div>
         <div className="flex items-center gap-2">
           <Clock className="size-3.5" />
-          {`${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`}
+          {startTime ? timeString : "NOT STARTED"}
         </div>
       </div>
       <div className="mb-2 flex items-end justify-between">
         <div className="text-4xl font-medium">
-          {progressPercentage.toFixed(2)}%
+          {totalEpochs ? progressPercentage.toFixed(2) : "0"}%
         </div>
         <div className="text-lg text-muted-foreground">
-          {epoch}/{totalEpochs} Epochs
+          {totalEpochs ? `${epoch}/${totalEpochs} Epochs` : "0/? Epochs"}
         </div>
       </div>
       <ProgressBar progress={progressPercentage} total={100} />
