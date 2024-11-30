@@ -1,21 +1,21 @@
 "use client";
-import Nav from "@/components/dashboard/nav";
-import Progress from "@/components/dashboard/progress";
-import Devices from "@/components/dashboard/devices";
-import Compute from "@/components/dashboard/compute";
-import Loss from "@/components/dashboard/loss";
-import Timing from "@/components/dashboard/timing";
-import ModelVisualization from "@/components/dashboard/model-visualization";
-import Earnings from "@/components/dashboard/earnings";
+
+import Nav from "./nav";
+import Progress from "./progress";
+import Devices from "./devices";
+import Compute from "./compute";
+import Loss from "./loss";
+import Timing from "./timing";
+import ModelVisualization from "./model-visualization";
+import Earnings from "./earnings";
 
 import { socket } from "@/lib/socket";
 import { useState } from "react";
 import { useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { EpochStats, TimingData, TrainingData } from "@/lib/types";
+import { getData } from "@/components/models/data";
 
-export default function Home() {
+export default function Dashboard({ id }: { id: string }) {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
   const [epochStats, setEpochStats] = useState<EpochStats[]>([]);
   const [trainingData, setTrainingData] = useState<TrainingData[]>([]);
