@@ -251,7 +251,7 @@ class DistributedNeuralNetwork:
             # UPDATE THIS LATER
             device_specific_data = []
             for device_id in self.device_connections.keys():
-                device_specific_data.append({'device_id': device_id, 'total_teraflops': self.teraflops_data[device_id]['total_tflops'], 'chip': 'M2'})
+                device_specific_data.append({'device_id': device_id, 'total_teraflops': self.teraflops_data[device_id]['total_tflops'], 'chip': 'M2', 'device_layers': self.device_layer_map})
 
             # Instead of emitting directly, put the message in the queue
             if self.message_queue:
