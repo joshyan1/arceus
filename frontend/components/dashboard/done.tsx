@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import DrawingGrid from "./DrawingGrid";
 
 export default function DoneTraining({ model }: { model: AIModel }) {
   const modelImage = getModelImage(model.type);
@@ -45,6 +46,7 @@ export default function DoneTraining({ model }: { model: AIModel }) {
             {model.type === "neuralnetwork" ? "neural network" : model.type}
           </div>
         </div>
+        <DrawingGrid />
       </div>
       <div className="flex w-full items-center justify-between border-t p-4">
         <div className="flex gap-4 font-supply uppercase text-muted-foreground">
