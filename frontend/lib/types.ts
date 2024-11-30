@@ -1,11 +1,10 @@
 export type Device = {
-  id: number;
-  name: string;
-  cpu: string;
-  tflops: number;
-  task: number[];
-  usage: number;
-  battery: number;
+  device_id: number;
+  total_teraflops: number;
+  chip: string;
+  device_layers: {
+    [key: string]: number[];
+  };
 };
 
 export type TimingData = {
@@ -19,11 +18,7 @@ export type TimingData = {
   batch_idx: number;
   // total_computation: number;
   // total_overhead: number;
-  device_data: {
-    device_id: number;
-    total_teraflops: number;
-    chip: string;
-  }[];
+  device_data: Device[];
 };
 
 export type EpochStats = {

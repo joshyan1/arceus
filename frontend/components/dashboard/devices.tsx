@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/card";
 import { CircleGauge, Cpu, Laptop, Layers, Monitor, Zap } from "lucide-react";
 import { useAppContext } from "../providers/context";
 import { cn } from "@/lib/utils";
-import { you, devices } from "@/lib/devices";
+// import { you, devices } from "@/lib/devices";
 import { Device } from "@/lib/types";
-export default function Devices() {
+
+export default function Devices({ deviceData }: { deviceData: Device[] }) {
   return (
     <Card className="relative z-0 flex flex-1 overflow-hidden">
       <div className="absolute left-0 top-0 h-4 w-full bg-gradient-to-b from-card via-card/75 to-transparent" />
@@ -16,16 +17,16 @@ export default function Devices() {
           <div>DEVICES</div>
           <div className="flex items-center gap-2">
             <Laptop className="size-3.5" />
-            {devices.length + 1}
+            {deviceData.length + 1}
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <DeviceCard device={{ ...you, name: "YOUR DEVICE" }} />
+          {/* <DeviceCard device={{ ...you, name: "YOUR DEVICE" }} /> */}
 
-          <div className="my-2 h-px w-full bg-muted" />
+          {/* <div className="my-2 h-px w-full bg-muted" /> */}
 
-          {devices.map((device) => (
-            <DeviceCard key={device.id} device={device} />
+          {deviceData.map((device) => (
+            <DeviceCard key={device.device_id} device={device} />
           ))}
         </div>
       </div>
@@ -33,7 +34,18 @@ export default function Devices() {
   );
 }
 
-function DeviceCard({ device }: { device: Device }) {
+function DeviceCard({
+  device,
+}: {
+  device: {
+    device_id: number;
+    total_teraflops: number;
+    chip: string;
+    device_layers: {
+      [key: string]: number[];
+    };
+  };
+}) {
   const { hoveredDeviceId, setHoveredDeviceId } = useAppContext();
 
   return (
@@ -41,34 +53,37 @@ function DeviceCard({ device }: { device: Device }) {
       className={cn(
         "flex select-none flex-col rounded-lg bg-nested-card p-2 pr-3 font-supply text-sm transition-all",
         hoveredDeviceId !== null &&
-          hoveredDeviceId !== device.id &&
+          hoveredDeviceId !== device.device_id &&
           "opacity-50",
       )}
-      onMouseEnter={() => setHoveredDeviceId(device.id)}
+      onMouseEnter={() => setHoveredDeviceId(device.device_id)}
       onMouseLeave={() => setHoveredDeviceId(null)}
     >
       <div className="flex w-full items-center gap-2">
-        <div>{device.name}</div>
+        <div>ID {device.device_id}</div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Cpu className="size-3.5" />
-          {device.cpu}
+          {device.chip}
         </div>
       </div>
       <div className="grid grid-cols-2">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Layers className="size-3.5 text-primary" />L{device.task.join(",")}
+          <Layers className="size-3.5 text-primary" />L
+          {device.device_layers[1].join(",")}
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <CircleGauge className="size-3.5 text-primary" />
-          {device.tflops} TFLOPS
+          {(device.total_teraflops * 2000).toFixed(
+            2,
+          )} TFLOPS
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Monitor className="size-3.5 text-primary" />
-          {device.usage * 100}%
+          50%
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Zap className="size-3.5 text-primary" />
-          {device.battery * 100}%
+          75%
         </div>
       </div>
     </Card>

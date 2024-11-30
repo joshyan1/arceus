@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
 import { useAppContext } from "../providers/context";
-import { devices, you } from "@/lib/devices";
+import { Device } from "@/lib/types";
 
 const dimensions = [50, 50, 50, 10];
 const displayDimensions = [784, 128, 64, 10];
@@ -12,14 +12,17 @@ const initialConnections = generateConnections(dimensions);
 
 export default function ModelVisualization({
   pause = false,
+  deviceData,
 }: {
   pause: boolean;
+  deviceData: Device[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layerSpacing, setLayerSpacing] = useState(0);
   const { hoveredDeviceId } = useAppContext();
   const hoveredLayers =
-    [you, ...devices].find((d) => d.id === hoveredDeviceId)?.task || [];
+    deviceData.find((d) => d.device_id === hoveredDeviceId)?.device_layers[0] ||
+    [];
   const [connections, setConnections] =
     useState<Connection[][]>(initialConnections);
 
@@ -34,15 +37,18 @@ export default function ModelVisualization({
   }, [dimensions.length]);
 
   const [animationIndex, setAnimationIndex] = useState(1);
-
   useEffect(() => {
+    if (pause) {
+      setAnimationIndex(0);
+      return;
+    }
+
     const CYCLE_DURATION = 1000;
-    const RESET_PAUSE = 100; // Brief pause at 0
+    const RESET_PAUSE = 100;
 
     const interval = setInterval(() => {
       setAnimationIndex((prev) => {
         if (prev === dimensions.length) {
-          // Schedule the reset after a brief pause
           setTimeout(() => {
             setConnections(generateConnections(dimensions));
             setAnimationIndex(1);
@@ -54,14 +60,16 @@ export default function ModelVisualization({
     }, CYCLE_DURATION);
 
     return () => clearInterval(interval);
-  }, [dimensions.length]);
+  }, [dimensions.length, pause]);
 
   return (
     <Card
       ref={containerRef}
       className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
     >
-      {/* <div className="absolute">{animationIndex}</div> */}
+      {/* <div className="absolute left-0 top-0">
+        {pause ? "PAUSED" : "RUNNING"}
+      </div> */}
       <div
         className={cn(
           "absolute -z-20 h-full w-[200%] overflow-visible opacity-25",

@@ -1,22 +1,16 @@
 import { Device } from "./types";
 
-export const you: Device = {
+export const you = {
   id: 1,
   name: "JOSH YAN",
-  cpu: "M1",
-  tflops: 0.05,
-  task: [3],
   usage: 0.5,
   battery: 1,
 };
 
-export const devices: Device[] = [
+export const devices = [
   {
     id: 2,
     name: "RAJAN AGARWAL",
-    cpu: "M3 MAX",
-    tflops: 0.09,
-    task: [1],
     usage: 0.7,
     battery: 1,
   },

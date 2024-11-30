@@ -72,7 +72,7 @@ export default function Home() {
 
     function onTimingEvent(value: any) {
       setTimingData((prev) => [...prev, value]);
-      console.log(value);
+      console.log("timing_data", value);
       if (!isTraining) {
         setIsTraining(true);
       }
@@ -120,6 +120,16 @@ export default function Home() {
     100,
   );
 
+  const totalCompute =
+    timingData.length > 0
+      ? timingData[timingData.length - 1].device_data.reduce(
+          (acc, curr) => acc + curr.total_teraflops,
+          0,
+        ) * 2000
+      : 0;
+  const deviceData =
+    timingData.length > 0 ? timingData[timingData.length - 1].device_data : [];
+
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} />
@@ -134,13 +144,16 @@ export default function Home() {
                 progressPercentage={progressPercentage}
               />
               {/* <Earnings /> */}
-              <Compute />
-              <Devices />
+              <Compute totalCompute={totalCompute} />
+              <Devices deviceData={deviceData} />
             </div>
             <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
               <Loss epochStats={epochStats} trainingData={trainingData} />
               <Timing timingData={timingData} epoch={epoch} />
-              <ModelVisualization pause={progressPercentage >= 100} />
+              <ModelVisualization
+                pause={progressPercentage >= 100}
+                deviceData={deviceData}
+              />
             </div>
           </div>
         </>
