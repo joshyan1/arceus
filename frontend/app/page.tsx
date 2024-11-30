@@ -15,18 +15,10 @@ import { DataTable } from "@/components/models/data-table";
 import { columns } from "@/components/models/columns";
 import { getData } from "@/components/models/data";
 
-// Assets
-import Transformer1 from "@/assets/images/transformer1.png";
-import Transformer2 from "@/assets/images/transformer2.png";
-import Transformer3 from "@/assets/images/transformer3.png";
-import NeuralNetwork1 from "@/assets/images/nn1.png";
-import NeuralNetwork2 from "@/assets/images/nn2.png";
-import NeuralNetwork3 from "@/assets/images/nn3.png";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-const transformerImages = [Transformer1, Transformer2, Transformer3];
-const neuralNetworkImages = [NeuralNetwork1, NeuralNetwork2, NeuralNetwork3];
+import getModelImage from "@/lib/model-image";
+import Link from "next/link";
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -54,11 +46,7 @@ export default function Home() {
 
   useEffect(() => {
     if (hoveredModel) {
-      const images =
-        hoveredModel.type === "transformer"
-          ? transformerImages
-          : neuralNetworkImages;
-      const randomImage = images[Math.floor(Math.random() * images.length)];
+      const randomImage = getModelImage(hoveredModel.type);
       setCurrentImage(randomImage);
     } else {
       setCurrentImage(null);
@@ -223,10 +211,12 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <Button variant="secondary">
-              Join Training Run
-              <div className="text-muted-foreground">⌘K</div>
-            </Button>
+            <Link href={`/model/${hoveredModel?.id}`}>
+              <Button variant="secondary">
+                Join Training Run
+                <div className="text-muted-foreground">⌘K</div>
+              </Button>
+            </Link>
           </div>
         </Card>
       </div>

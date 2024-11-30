@@ -1,5 +1,6 @@
 import { getData } from "@/components/models/data";
 import Dashboard from "@/components/dashboard";
+import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
   const models = getData();
@@ -7,5 +8,9 @@ export async function generateStaticParams() {
 }
 
 export default function ModelDashboard({ params }: { params: { id: string } }) {
-  return <Dashboard id={params.id} />;
+  const model = getData().find((model) => model.id === params.id);
+  if (!model) {
+    notFound();
+  }
+  return <Dashboard model={model} />;
 }

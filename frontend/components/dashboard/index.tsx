@@ -13,9 +13,11 @@ import { socket } from "@/lib/socket";
 import { useState } from "react";
 import { useEffect } from "react";
 import { EpochStats, TimingData, TrainingData } from "@/lib/types";
-import { getData } from "@/components/models/data";
+import { AIModel } from "../models/columns";
+import { cn } from "@/lib/utils";
+import WaitingForTraining from "./waiting";
 
-export default function Dashboard({ id }: { id: string }) {
+export default function Dashboard({ model }: { model: AIModel }) {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
   const [epochStats, setEpochStats] = useState<EpochStats[]>([]);
   const [trainingData, setTrainingData] = useState<TrainingData[]>([]);
@@ -132,27 +134,39 @@ export default function Dashboard({ id }: { id: string }) {
 
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
-      <Nav isConnected={isConnected} />
-      <div className="flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4">
-        <div className="flex w-96 flex-col gap-4">
-          <Progress
-            epoch={epoch}
-            totalEpochs={totalEpochs}
-            startTime={startTime}
-            progressPercentage={progressPercentage}
-          />
-          {/* <Earnings /> */}
-          <Compute totalCompute={totalCompute} />
-          <Devices deviceData={deviceData} />
-        </div>
-        <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
-          <Loss epochStats={epochStats} trainingData={trainingData} />
-          <Timing timingData={timingData} epoch={epoch} />
-          <ModelVisualization
-            pause={progressPercentage >= 100}
-            deviceData={deviceData}
-          />
-        </div>
+      <Nav isConnected={isConnected} modelName={model.name} />
+      <div
+        className={cn(
+          "flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4",
+          !isTraining && "items-center justify-center",
+        )}
+      >
+        {isTraining ? (
+          <>
+            <div className="flex w-96 flex-col gap-4">
+              <Progress
+                epoch={epoch}
+                totalEpochs={totalEpochs}
+                startTime={startTime}
+                progressPercentage={progressPercentage}
+              />
+              {/* <Earnings /> */}
+              <Compute totalCompute={totalCompute} />
+              <Devices deviceData={deviceData} />
+            </div>
+            <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
+              <Loss epochStats={epochStats} trainingData={trainingData} />
+              <Timing timingData={timingData} epoch={epoch} />
+              <ModelVisualization
+                pause={progressPercentage >= 100}
+                deviceData={deviceData}
+              />
+            </div>
+          </>
+        ) : (
+          <WaitingForTraining model={model} />
+          // <div>Waiting for training to start...</div>
+        )}
       </div>
     </div>
   );
