@@ -22,7 +22,7 @@ export default function Nav({
     <nav className="relative flex h-14 w-full shrink-0 select-none items-center justify-between border-b px-4">
       <div className="flex items-center gap-2 text-lg">
         <Link href="/">
-          <div className="font-supply transition-all hover:text-muted-foreground">
+          <div className="font-supply transition-all hover:text-primary">
             ARCEUS
           </div>
         </Link>
