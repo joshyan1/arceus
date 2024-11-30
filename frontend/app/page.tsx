@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 
 // UI Components
 import Nav from "@/components/dashboard/nav";
@@ -14,11 +14,17 @@ import { ColumnFiltersState } from "@tanstack/react-table";
 import { DataTable } from "@/components/models/data-table";
 import { columns } from "@/components/models/columns";
 import { getData } from "@/components/models/data";
-import { AIModel } from "@/components/models/columns";
 
 // Assets
-import Transformer from "@/assets/images/transformer.png";
-import NeuralNetwork from "@/assets/images/nn.png";
+import Transformer1 from "@/assets/images/transformer1.png";
+import Transformer2 from "@/assets/images/transformer2.png";
+import Transformer3 from "@/assets/images/transformer3.png";
+import NeuralNetwork1 from "@/assets/images/nn1.png";
+import NeuralNetwork2 from "@/assets/images/nn2.png";
+import NeuralNetwork3 from "@/assets/images/nn3.png";
+
+const transformerImages = [Transformer1, Transformer2, Transformer3];
+const neuralNetworkImages = [NeuralNetwork1, NeuralNetwork2, NeuralNetwork3];
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -26,6 +32,22 @@ export default function Home() {
   const [isFocused, setIsFocused] = useState(false);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [hoveredModelId, setHoveredModelId] = useState<string | null>(null);
+  const [currentImage, setCurrentImage] = useState<StaticImageData | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (hoveredModel) {
+      const images =
+        hoveredModel.type === "transformer"
+          ? transformerImages
+          : neuralNetworkImages;
+      const randomImage = images[Math.floor(Math.random() * images.length)];
+      setCurrentImage(randomImage);
+    } else {
+      setCurrentImage(null);
+    }
+  }, [hoveredModelId]);
 
   const handleSearch = (value: string) => {
     setColumnFilters([
@@ -75,13 +97,9 @@ export default function Home() {
         </Card>
         <Card className="group flex flex-col items-start gap-4 p-4">
           <div className="relative flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md border">
-            {hoveredModel && (
+            {currentImage && (
               <Image
-                src={
-                  hoveredModel.type === "transformer"
-                    ? Transformer
-                    : NeuralNetwork
-                }
+                src={currentImage}
                 alt="AI Illustration"
                 fill
                 className="absolute object-cover saturate-0 duration-300 group-hover:saturate-100"
