@@ -3,10 +3,17 @@ import { Card } from "../ui/card";
 import { AIModel } from "../models/columns";
 import getModelImage from "@/lib/model-image";
 import Image from "next/image";
-import { CircleDollarSign, Loader2, Users } from "lucide-react";
+import {
+  Check,
+  CircleDollarSign,
+  Loader2,
+  MonitorCheck,
+  Receipt,
+  Users,
+} from "lucide-react";
 import { Button } from "../ui/button";
 
-export default function WaitingForTraining({ model }: { model: AIModel }) {
+export default function DoneTraining({ model }: { model: AIModel }) {
   const modelImage = getModelImage(model.type);
 
   return (
@@ -42,19 +49,15 @@ export default function WaitingForTraining({ model }: { model: AIModel }) {
       <div className="flex w-full items-center justify-between border-t p-4">
         <div className="flex gap-4 font-supply uppercase text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Users className="size-4 text-primary" />
-            <div className="text-sm">{model.spots} users</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <CircleDollarSign className="size-4 text-primary" />
+            <Receipt className="size-4 text-primary" />
             <div className="text-sm">
-              ${model.projectedEarnings.toFixed(2)} (projected)
+              ${model.projectedEarnings.toFixed(2)} earned
             </div>
           </div>
         </div>
         <Button disabled variant="secondary">
-          <Loader2 className="size-4 animate-spin" />
-          Waiting for host...
+          <Check className="size-4" />
+          Done Training
         </Button>
       </div>
     </Card>

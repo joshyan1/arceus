@@ -16,6 +16,7 @@ import { EpochStats, TimingData, TrainingData } from "@/lib/types";
 import { AIModel } from "../models/columns";
 import { cn } from "@/lib/utils";
 import WaitingForTraining from "./waiting";
+import DoneTraining from "./done";
 
 export default function Dashboard({ model }: { model: AIModel }) {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
@@ -164,7 +165,8 @@ export default function Dashboard({ model }: { model: AIModel }) {
             </div>
           </>
         ) : (
-          <WaitingForTraining model={model} />
+          <DoneTraining model={model} />
+          // <WaitingForTraining model={model} />
           // <div>Waiting for training to start...</div>
         )}
       </div>
