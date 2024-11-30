@@ -166,7 +166,7 @@ export default function Dashboard({ model }: { model: AIModel }) {
           </>
         ) : (
           // <DoneTraining model={model} />
-          <WaitingForTraining model={model} />
+          <WaitingForTraining model={model} startTraining={startTraining} />
         )}
       </div>
     </div>

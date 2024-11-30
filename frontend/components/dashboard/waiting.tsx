@@ -3,10 +3,16 @@ import { Card } from "../ui/card";
 import { AIModel } from "../models/columns";
 import getModelImage from "@/lib/model-image";
 import Image from "next/image";
-import { CircleDollarSign, Loader2, Users } from "lucide-react";
+import { BrainCircuit, CircleDollarSign, Loader2, Users } from "lucide-react";
 import { Button } from "../ui/button";
 
-export default function WaitingForTraining({ model }: { model: AIModel }) {
+export default function WaitingForTraining({
+  model,
+  startTraining,
+}: {
+  model: AIModel;
+  startTraining: () => void;
+}) {
   const modelImage = getModelImage(model.type);
 
   return (
@@ -52,9 +58,13 @@ export default function WaitingForTraining({ model }: { model: AIModel }) {
             </div>
           </div>
         </div>
-        <Button disabled variant="secondary">
+        {/* <Button disabled variant="secondary">
           <Loader2 className="size-4 animate-spin" />
           Waiting for host...
+        </Button> */}
+        <Button variant="secondary" onClick={startTraining}>
+          <BrainCircuit className="size-4 animate-spin" />
+          Start Training
         </Button>
       </div>
     </Card>
