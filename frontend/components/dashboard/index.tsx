@@ -6,7 +6,7 @@ import Devices from "./devices";
 import Compute from "./compute";
 import Loss from "./loss";
 import Timing from "./timing";
-import ModelVisualization from "./model-visualization";
+import NeuralNetworkVisualization from "./nn-visualization";
 import Earnings from "./earnings";
 
 import { socket } from "@/lib/socket";
@@ -133,12 +133,14 @@ export default function Dashboard({ model }: { model: AIModel }) {
   const deviceData =
     timingData.length > 0 ? timingData[timingData.length - 1].device_data : [];
 
+  const doneTraining = progressPercentage >= 100;
+
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} modelName={model.name} />
       <div
         className={cn(
-          "flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4",
+          "relative z-0 flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4",
           !isTraining && "items-center justify-center",
         )}
       >
@@ -158,14 +160,19 @@ export default function Dashboard({ model }: { model: AIModel }) {
             <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
               <Loss epochStats={epochStats} trainingData={trainingData} />
               <Timing timingData={timingData} epoch={epoch} />
-              <ModelVisualization
-                pause={progressPercentage >= 100}
+              <NeuralNetworkVisualization
+                pause={doneTraining}
                 deviceData={deviceData}
               />
             </div>
+            {doneTraining && (
+              <>
+                <div className="absolute left-0 top-0 h-full w-full bg-black/60" />
+                <DoneTraining model={model} />
+              </>
+            )}
           </>
         ) : (
-          // <DoneTraining model={model} />
           <WaitingForTraining model={model} startTraining={startTraining} />
         )}
       </div>

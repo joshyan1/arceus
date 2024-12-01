@@ -63,7 +63,6 @@ export default function WaitingForTraining({
           Waiting for host...
         </Button> */}
         <Button variant="secondary" onClick={startTraining}>
-          <BrainCircuit className="size-4 animate-spin" />
           Start Training
         </Button>
       </div>

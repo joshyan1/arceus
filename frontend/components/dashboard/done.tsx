@@ -18,7 +18,7 @@ export default function DoneTraining({ model }: { model: AIModel }) {
   const modelImage = getModelImage(model.type);
 
   return (
-    <Card className="group flex w-full max-w-xl flex-col items-start">
+    <Card className="group absolute left-1/2 top-1/2 flex w-full max-w-xl -translate-x-1/2 -translate-y-1/2 flex-col items-start">
       <div className="w-full p-4 pb-0">
         <div className="relative z-0 flex aspect-[2/1] w-full items-center justify-center rounded-md border">
           {modelImage && (

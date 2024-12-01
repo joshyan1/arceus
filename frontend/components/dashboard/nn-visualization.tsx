@@ -10,7 +10,7 @@ const dimensions = [50, 50, 50, 10];
 const displayDimensions = [784, 128, 64, 10];
 const initialConnections = generateConnections(dimensions);
 
-export default function ModelVisualization({
+export default function NeuralNetworkVisualization({
   pause = false,
   deviceData,
 }: {
