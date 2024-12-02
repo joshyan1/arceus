@@ -177,7 +177,7 @@ export default function Dashboard({ model }: { model: AIModel }) {
               )}
               <Timing
                 timingData={timingData}
-                epoch={epoch}
+                epoch={epoch + 1}
                 className={model.type === "transformer" ? "col-span-2" : ""}
               />
               {model.type === "neuralnetwork" && (
