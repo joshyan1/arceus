@@ -199,7 +199,8 @@ def start_training(job_id):
                 os.environ['TRAINING_DATA_PATH'] = source_file
                 
                 # Run the GPT model training with message queue
-                train(message_queue=message_queue, job_id=job_id)
+                thread = threading.Thread(target=train, args=(message_queue, job_id))
+                thread.start()
                 
                 job_config['status'] = 'completed'
                 return
