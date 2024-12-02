@@ -19,7 +19,11 @@ const stages = [
   ["Input Embedding", "mt-8"],
 ];
 
-export default function TransformerVisualization() {
+export default function TransformerVisualization({
+  pause = false,
+}: {
+  pause?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [animationStage, setAnimationStage] = useState(0);
@@ -27,6 +31,10 @@ export default function TransformerVisualization() {
 
   useEffect(() => {
     setAnimationKey(0);
+    if (pause) {
+      setAnimationStage(-1);
+      return;
+    }
     const interval = setInterval(() => {
       setAnimationStage((prev) => {
         if (prev === 9) {
@@ -40,7 +48,7 @@ export default function TransformerVisualization() {
       });
     }, 150);
     return () => clearInterval(interval);
-  }, []);
+  }, [pause]);
 
   return (
     <Card

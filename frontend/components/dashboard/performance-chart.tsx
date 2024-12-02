@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -23,39 +24,6 @@ const formatTimestamp = (timestamp: Date) => {
   });
 };
 
-const generateRandomData = () => {
-  const data = [];
-  let currentValue = 5;
-  const now = new Date();
-
-  for (let i = 0; i < 10; i++) {
-    const timestamp = new Date(now.getTime() - (9 - i) * 60 * 60 * 1000);
-
-    if (i < 8) {
-      const remainingPoints = 7 - i;
-      const neededIncrease =
-        remainingPoints > 0 ? (45 - currentValue) / remainingPoints : 0;
-      currentValue += neededIncrease + (Math.random() * 2 - 1);
-      currentValue = Math.min(currentValue, 45);
-
-      data.push({
-        hour: `${i + 1}h`,
-        performance: Math.round(currentValue),
-        timestamp,
-      });
-    } else {
-      data.push({
-        hour: `${i + 1}h`,
-        performance: null,
-        timestamp,
-      });
-    }
-  }
-  return data;
-};
-
-const chartData = generateRandomData();
-
 const chartConfig = {
   performance: {
     label: "Performance",
@@ -63,7 +31,53 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function PerformanceChart() {
+export default function PerformanceChart({
+  totalCompute,
+}: {
+  totalCompute: number;
+}) {
+  const [history, setHistory] = useState<{ value: number; timestamp: Date }[]>(
+    [],
+  );
+
+  useEffect(() => {
+    setHistory((prev) => {
+      const now = new Date();
+      const newHistory = [
+        ...prev,
+        { value: totalCompute, timestamp: now },
+      ].slice(-8); // Keep last 8 points
+      return newHistory;
+    });
+  }, [totalCompute]);
+
+  const chartData = (() => {
+    const data = [];
+    const now = new Date();
+
+    // Fill with actual history
+    history.forEach((point, i) => {
+      data.push({
+        hour: `${i + 1}h`,
+        performance: point.value,
+        timestamp: point.timestamp,
+      });
+    });
+
+    // Pad with nulls if needed
+    const remaining = 10 - history.length;
+    for (let i = 0; i < remaining; i++) {
+      const timestamp = new Date(now.getTime() + i * 60 * 60 * 1000);
+      data.push({
+        hour: `${history.length + i + 1}h`,
+        performance: null,
+        timestamp,
+      });
+    }
+
+    return data;
+  })();
+
   return (
     <div className="h-36">
       <ChartContainer config={chartConfig} height={144}>

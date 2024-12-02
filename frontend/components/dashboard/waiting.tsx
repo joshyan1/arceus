@@ -57,24 +57,17 @@ export default function WaitingForTraining({
 
         <div className="flex flex-col gap-2">
           <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
-            <div>RAJAN AGARWAL</div>
+            <div>USER 1</div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Cpu className="size-3.5" />
-              M3
+              M2 Pro
             </div>
           </Card>
           <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
-            <div>SIMERUS MAHESH</div>
+            <div>USER 2</div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Cpu className="size-3.5" />
-              M3
-            </div>
-          </Card>
-          <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
-            <div>BOSHUA YAN</div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Cpu className="size-3.5" />
-              M3
+              M3 Max
             </div>
           </Card>
           <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">

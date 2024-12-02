@@ -2,7 +2,7 @@
 
 import AppContextProvider from "./context";
 import ThemeProvider from "./theme";
-import { useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +13,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         {children}
+        <Toaster />
       </ThemeProvider>
     </AppContextProvider>
   );

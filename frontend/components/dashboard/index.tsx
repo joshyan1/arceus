@@ -18,6 +18,7 @@ import { AIModel } from "../models/columns";
 import { cn } from "@/lib/utils";
 import WaitingForTraining from "./waiting";
 import DoneTraining from "./done";
+import { toast } from "sonner";
 
 export default function Dashboard({ model }: { model: AIModel }) {
   const [timingData, setTimingData] = useState<TimingData[]>([]);
@@ -60,6 +61,9 @@ export default function Dashboard({ model }: { model: AIModel }) {
         console.error("Training failed to start:", data.error);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error(`Error starting training: ${errorMessage}`);
       console.error("Error starting training:", error);
     }
   }
@@ -168,7 +172,9 @@ export default function Dashboard({ model }: { model: AIModel }) {
                 trainingData={trainingData}
                 className={model.type === "transformer" ? "col-span-2" : ""}
               />
-              {model.type === "transformer" && <TransformerVisualization />}
+              {model.type === "transformer" && (
+                <TransformerVisualization pause={doneTraining} />
+              )}
               <Timing
                 timingData={timingData}
                 epoch={epoch}

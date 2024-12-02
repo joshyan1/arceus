@@ -18,7 +18,7 @@ export default function Compute({ totalCompute }: { totalCompute: number }) {
           {(totalCompute / 100).toFixed(2)} H100s
         </div>
       </div>
-      <PerformanceChart />
+      <PerformanceChart totalCompute={totalCompute} />
     </Card>
   );
 }
