@@ -7,6 +7,8 @@ import math
 from termcolor import colored
 from tqdm import tqdm
 import os
+from queue import Queue
+import time
 print("Importing libraries...")
 
 ### hyper params
@@ -212,8 +214,17 @@ print("Initializing model and optimizer...")
 model = GPT().to(device)
 optimizer = optim.AdamW(model.parameters(), lr=lr)
 
+message_queue = Queue()
+
+# Calculate total parameters
+total_params = sum(p.numel() for p in model.parameters())
+
+# Initialize total tokens counter
+total_tokens_trained = 0
+
 print("\nStarting training loop...")
 progress_bar = tqdm(range(num_epochs), desc="Training Progress")
+epoch_start = time.time()
 
 for epoch in progress_bar:
     model.train()
@@ -225,14 +236,74 @@ for epoch in progress_bar:
                          desc=colored(f"Epoch {epoch+1}", "cyan"),
                          leave=False)
     
-    for input, label in batch_progress:
+    for batch_idx, (input, label) in enumerate(batch_progress):
+        batch_start = time.time()
+        
+        # Time the data preparation
+        start_prep = time.time()
         input, label = input.to(device), label.to(device)
+        prep_time = time.time() - start_prep
+        
+        # Time the forward pass
+        start_forward = time.time()
         optimizer.zero_grad()
+        logits = model(input)
+        forward_time = time.time() - start_forward
+        
+        # Time the backward pass
+        start_backward = time.time()
         loss = loss_fn(model, input, label)
         loss.backward()
+        backward_time = time.time() - start_backward
+        
+        # Time the parameter update
+        start_update = time.time()
         optimizer.step()
+        update_time = time.time() - start_update
+        
         running_loss += loss.item()
         batch_cnt += 1
+        
+        # Update total tokens trained
+        total_tokens_trained += input.numel()
+        
+        # Emit timing stats every 10 batches
+        if batch_idx % 10 == 0:
+            message_queue.put({
+                'event': 'timing_stats',
+                'data': {
+                    'epoch': epoch + 1,
+                    'batch_idx': batch_idx,
+                    'avg_forward': forward_time,
+                    'avg_backward': backward_time,
+                    'avg_update': update_time,
+                    'avg_prep': prep_time,
+                    'avg_comm': 0,  # No communication overhead for single-device training
+                    'device_data': [{
+                        'device_id': 1,
+                        'total_teraflops': (
+                            (total_params * 2 * batch_size) / 
+                            (forward_time + backward_time) / 1e12
+                        )
+                    }],
+                    'total_tokens_trained': total_tokens_trained
+                },
+                'room': 'training_room'
+            })
+
+            # Also emit training progress
+            message_queue.put({
+                'event': 'training_data',
+                'data': {
+                    'epoch': epoch + 1,
+                    'epochs': num_epochs,
+                    'train_loss': float(loss.item()),
+                    'batch_idx': batch_idx,
+                    'batch_time': time.time() - batch_start,
+                    'total_tokens_trained': total_tokens_trained
+                },
+                'room': 'training_room'
+            })
         
         # Update batch progress
         batch_progress.set_postfix({'loss': f'{loss.item():.4f}'})
@@ -253,6 +324,21 @@ for epoch in progress_bar:
             batch_cnt += 1
 
     avg_val_loss = running_loss / batch_cnt
+    epoch_time = time.time() - epoch_start
+    
+    # Emit epoch statistics
+    message_queue.put({
+        'event': 'epoch_stats',
+        'data': {
+            'epoch': epoch + 1,
+            'epochs': num_epochs,
+            'train_loss': float(avg_train_loss),
+            'val_loss': float(avg_val_loss),
+            'epoch_time': epoch_time,
+            'total_tokens_trained': total_tokens_trained
+        },
+        'room': 'training_room'
+    })
     
     # Update progress bar with both losses
     progress_bar.set_postfix({
@@ -261,6 +347,7 @@ for epoch in progress_bar:
     })
     
     print(colored(f"\n✓ Epoch {epoch+1:2} completed | train_loss = {avg_train_loss:.4f} | val_loss = {avg_val_loss:.4f}", "green"))
+    epoch_start = time.time()
 
 print(colored("\n✨ Training completed!", "magenta", attrs=['bold']))
 
