@@ -93,7 +93,7 @@ function DeviceCard({
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <CircleGauge className="size-3.5 text-primary" />
-          {(device.total_teraflops * 2000).toFixed(
+          {(device.total_teraflops * 50).toFixed(
             2,
           )} TFLOPS
         </div>

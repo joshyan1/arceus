@@ -134,7 +134,7 @@ export default function Dashboard({ model }: { model: AIModel }) {
       ? timingData[timingData.length - 1].device_data.reduce(
           (acc, curr) => acc + curr.total_teraflops,
           0,
-        ) * 2000
+        ) * 50
       : 0;
 
   const earnings = (progressPercentage * model.projectedEarnings) / 100;
