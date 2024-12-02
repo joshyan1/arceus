@@ -38,4 +38,7 @@ export type TrainingData = {
   train_acc: number;
   batch_idx: number;
   batch_time: number;
+  num_batches: number;
+  tokens_trained: number;
+  total_tokens: number;
 };

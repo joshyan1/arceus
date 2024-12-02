@@ -22,6 +22,7 @@ n_layers = 3
 # training
 num_epochs = 10
 batch_size = 128
+num_batches = 0
 lr = 1e-3
 
 print("Hyperparameters set:")
@@ -49,6 +50,7 @@ decode = lambda x: ''.join([itos[i] for i in x])
 data = encode(text)
 split = int(0.9 * len(data))
 train_data = data[:split]
+num_batches = len(train_data) // batch_size
 val_data = data[split:]
 
 print(f"Vocabulary size: {vocab_size}")
@@ -275,7 +277,6 @@ def train(message_queue=None, job_id='training_room'):
                 message_queue.put({
                     'event': 'timing_stats',
                     'data': {
-                        'epoch': epoch,
                         'batch_idx': batch_idx,
                         'avg_forward': forward_time,
                         'avg_backward': backward_time,
@@ -299,9 +300,12 @@ def train(message_queue=None, job_id='training_room'):
                         'epoch': epoch,
                         'epochs': num_epochs,
                         'train_loss': float(loss.item()),
+                        'train_acc': 0,
                         'batch_idx': batch_idx,
                         'batch_time': batch_time,
-                        'total_tokens_trained': total_tokens_trained
+                        'total_tokens_trained': total_tokens_trained,
+                        'num_batches': num_batches,
+                        'tokens_trained': B * T
                     },
                     'room': job_id
                 })
