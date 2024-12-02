@@ -2,13 +2,16 @@ import { Check } from "lucide-react";
 import { Card } from "../ui/card";
 import LossChart from "./loss-chart";
 import { EpochStats, TrainingData } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function Loss({
   epochStats,
   trainingData,
+  className,
 }: {
   epochStats: EpochStats[];
   trainingData: TrainingData[];
+  className?: string;
 }) {
   const trainingAccuracy = trainingData.map((epoch) => epoch.train_acc);
   const latestAccuracy =
@@ -17,7 +20,7 @@ export default function Loss({
       : "0.00";
 
   return (
-    <Card className="flex flex-col p-4">
+    <Card className={cn("flex flex-col p-4", className)}>
       <div className="mb-4 flex justify-between font-supply text-sm text-muted-foreground">
         <div>LOSS</div>
         <div className="flex items-center gap-2">

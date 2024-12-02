@@ -6,7 +6,8 @@ import Devices from "./devices";
 import Compute from "./compute";
 import Loss from "./loss";
 import Timing from "./timing";
-import NeuralNetworkVisualization from "./nn-visualization";
+import NeuralNetworkVisualization from "./visualization/nn";
+import TransformerVisualization from "./visualization/transformer";
 import Earnings from "./earnings";
 
 import { socket } from "@/lib/socket";
@@ -75,7 +76,6 @@ export default function Dashboard({ model }: { model: AIModel }) {
 
     function onTimingEvent(value: any) {
       setTimingData((prev) => [...prev, value]);
-      console.log("timing_data", value);
       if (!isTraining) {
         setIsTraining(true);
       }
@@ -111,17 +111,19 @@ export default function Dashboard({ model }: { model: AIModel }) {
   }, []);
 
   const epoch =
-    epochStats.length > 0 ? epochStats[epochStats.length - 1].epoch : 0;
+    trainingData.length > 0 ? trainingData[trainingData.length - 1].epoch : 0;
   const totalEpochs =
-    epochStats.length > 0 ? epochStats[epochStats.length - 1].epochs : 0;
+    trainingData.length > 0 ? trainingData[trainingData.length - 1].epochs : 0;
   const batch =
     timingData.length > 0 ? timingData[timingData.length - 1].batch_idx : 0;
-  const batchSize = 256;
+  const batchSize = 220;
 
   const progressPercentage = Math.min(
     ((epoch * batchSize + batch) / (totalEpochs * batchSize)) * 100,
     100,
   );
+
+  const doneTraining = epoch >= totalEpochs && batch >= batchSize;
 
   const totalCompute =
     timingData.length > 0
@@ -133,48 +135,62 @@ export default function Dashboard({ model }: { model: AIModel }) {
   const deviceData =
     timingData.length > 0 ? timingData[timingData.length - 1].device_data : [];
 
-  const doneTraining = progressPercentage >= 100;
-
   return (
     <div className="flex h-full max-h-screen w-full flex-col">
       <Nav isConnected={isConnected} modelName={model.name} />
       <div
         className={cn(
           "relative z-0 flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4",
-          !isTraining && "items-center justify-center",
+          // !isTraining && "items-center justify-center",
         )}
       >
-        {isTraining ? (
-          <>
-            <div className="flex w-96 flex-col gap-4">
-              <Progress
-                epoch={epoch}
-                totalEpochs={totalEpochs}
-                startTime={startTime}
-                progressPercentage={progressPercentage}
-              />
-              {/* <Earnings /> */}
-              <Compute totalCompute={totalCompute} />
-              <Devices deviceData={deviceData} />
-            </div>
-            <div className="grid grow grid-cols-2 grid-rows-2 gap-4">
-              <Loss epochStats={epochStats} trainingData={trainingData} />
-              <Timing timingData={timingData} epoch={epoch} />
+        {/* {isTraining ? ( */}
+        <>
+          <div className="flex w-96 flex-col gap-4">
+            <Progress
+              epoch={epoch}
+              totalEpochs={totalEpochs}
+              startTime={startTime}
+              progressPercentage={progressPercentage}
+            />
+            {/* <Earnings /> */}
+            <Compute totalCompute={totalCompute} />
+            <Devices deviceData={deviceData} />
+          </div>
+          <div
+            className={cn(
+              "grid grow grid-rows-2 gap-4",
+              model.type === "transformer" ? "grid-cols-3" : "grid-cols-2",
+            )}
+          >
+            <Loss
+              epochStats={epochStats}
+              trainingData={trainingData}
+              className={model.type === "transformer" ? "col-span-2" : ""}
+            />
+            {model.type === "transformer" && <TransformerVisualization />}
+            <Timing
+              timingData={timingData}
+              epoch={epoch}
+              className={model.type === "transformer" ? "col-span-2" : ""}
+            />
+            {model.type === "neuralnetwork" && (
               <NeuralNetworkVisualization
                 pause={doneTraining}
                 deviceData={deviceData}
               />
-            </div>
-            {doneTraining && (
+            )}
+          </div>
+          {/* {doneTraining && (
               <>
                 <div className="absolute left-0 top-0 h-full w-full bg-black/60" />
                 <DoneTraining model={model} />
               </>
-            )}
-          </>
-        ) : (
+            )} */}
+        </>
+        {/* ) : (
           <WaitingForTraining model={model} startTraining={startTraining} />
-        )}
+        )} */}
       </div>
     </div>
   );

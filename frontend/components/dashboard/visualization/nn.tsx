@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Card } from "../ui/card";
+import { Card } from "../../ui/card";
 import { useRef, useState, useLayoutEffect, Fragment, useEffect } from "react";
-import { useAppContext } from "../providers/context";
+import { useAppContext } from "../../providers/context";
 import { Device } from "@/lib/types";
 
 const dimensions = [50, 50, 50, 10];
@@ -65,7 +65,7 @@ export default function NeuralNetworkVisualization({
   return (
     <Card
       ref={containerRef}
-      className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
+      className="relative z-0 row-span-2 flex items-center justify-evenly font-supply"
     >
       {/* <div className="absolute left-0 top-0">
         {pause ? "PAUSED" : "RUNNING"}
@@ -80,7 +80,7 @@ export default function NeuralNetworkVisualization({
           style={{
             left: `${((layerSpacing + 40) * (dimensions.length - 1)) / 2}px`,
           }}
-          className="dotted-pattern absolute h-full w-full bg-primary"
+          className="dotted-pattern ripple-mask absolute h-full w-full bg-primary"
         ></div>
       </div>
 
