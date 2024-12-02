@@ -81,6 +81,10 @@ def get_batches(X, y, b_size, shuffle=True):
 
 print("Batch generation function defined.")
 
+# Calculate number of batches per epoch
+num_batches_per_epoch = math.ceil(X_train.shape[0] / batch_size)
+print(f"Number of batches per epoch: {num_batches_per_epoch}")
+
 ### Model Definition
 print("Defining model architecture...")
 
