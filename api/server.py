@@ -186,8 +186,9 @@ def start_training(job_id):
 
             if model_config.get('type') == 'transformer':
                 # Import and run the transformer model training
-                import runpy
+                import sys
                 import os
+                from gpt.model import train
                 
                 # Get the source file path
                 source_file = dataset_config.get('source')
@@ -197,8 +198,8 @@ def start_training(job_id):
                 # Set the data file for the model
                 os.environ['TRAINING_DATA_PATH'] = source_file
                 
-                # Run the GPT model training script
-                runpy.run_path('gpt/model.py', run_name='__main__')
+                # Run the GPT model training with message queue
+                train(message_queue=message_queue, job_id=job_id)
                 
                 job_config['status'] = 'completed'
                 return

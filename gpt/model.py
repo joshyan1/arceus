@@ -7,7 +7,6 @@ import math
 from termcolor import colored
 from tqdm import tqdm
 import os
-from queue import Queue
 import time
 print("Importing libraries...")
 
@@ -38,7 +37,8 @@ print(f"Learning rate: {lr}")
 
 ### Tokenization
 print("Loading and tokenizing data...")
-with open(os.path.join(os.path.dirname(__file__), 'data.txt'), 'r', encoding='utf-8') as f:
+data_path = os.environ.get('TRAINING_DATA_PATH', os.path.join(os.path.dirname(__file__), 'data.txt'))
+with open(data_path, 'r', encoding='utf-8') as f:
     text = f.read()
 vocab = sorted(list(set(text)))
 vocab_size = len(vocab)
@@ -214,156 +214,128 @@ print("Initializing model and optimizer...")
 model = GPT().to(device)
 optimizer = optim.AdamW(model.parameters(), lr=lr)
 
-message_queue = Queue()
-
 # Calculate total parameters
 total_params = sum(p.numel() for p in model.parameters())
 
-# Initialize total tokens counter
-total_tokens_trained = 0
+def train(message_queue=None, job_id='training_room'):
+    print("\nStarting training loop...")
+    progress_bar = tqdm(range(num_epochs), desc="Training Progress")
+    epoch_start = time.time()
+    total_tokens_trained = 0
 
-print("\nStarting training loop...")
-progress_bar = tqdm(range(num_epochs), desc="Training Progress")
-epoch_start = time.time()
-
-for epoch in progress_bar:
-    model.train()
-    running_loss = 0
-    batch_cnt = 0
-    
-    # Training loop with inner progress bar
-    batch_progress = tqdm(get_batches(X_train, y_train, batch_size), 
-                         desc=colored(f"Epoch {epoch+1}", "cyan"),
-                         leave=False)
-    
-    for batch_idx, (input, label) in enumerate(batch_progress):
-        batch_start = time.time()
+    for epoch in progress_bar:
+        model.train()
+        running_loss = 0
+        batch_cnt = 0
         
-        # Time the data preparation
-        start_prep = time.time()
-        input, label = input.to(device), label.to(device)
-        prep_time = time.time() - start_prep
+        # Training loop with inner progress bar
+        batch_progress = tqdm(get_batches(X_train, y_train, batch_size), 
+                            desc=colored(f"Epoch {epoch+1}", "cyan"),
+                            leave=False)
         
-        # Time the forward pass
-        start_forward = time.time()
-        optimizer.zero_grad()
-        logits = model(input)
-        forward_time = time.time() - start_forward
-        
-        # Time the backward pass
-        start_backward = time.time()
-        loss = loss_fn(model, input, label)
-        loss.backward()
-        backward_time = time.time() - start_backward
-        
-        # Time the parameter update
-        start_update = time.time()
-        optimizer.step()
-        update_time = time.time() - start_update
-        
-        running_loss += loss.item()
-        batch_cnt += 1
-        
-        # Update total tokens trained
-        total_tokens_trained += input.numel()
-        
-        # Emit timing stats every 10 batches
-        if batch_idx % 10 == 0:
-            message_queue.put({
-                'event': 'timing_stats',
-                'data': {
-                    'epoch': epoch + 1,
-                    'batch_idx': batch_idx,
-                    'avg_forward': forward_time,
-                    'avg_backward': backward_time,
-                    'avg_update': update_time,
-                    'avg_prep': prep_time,
-                    'avg_comm': 0,  # No communication overhead for single-device training
-                    'device_data': [{
-                        'device_id': 1,
-                        'total_teraflops': (
-                            (total_params * 2 * batch_size) / 
-                            (forward_time + backward_time) / 1e12
-                        )
-                    }],
-                    'total_tokens_trained': total_tokens_trained
-                },
-                'room': 'training_room'
-            })
-
-            # Also emit training progress
-            message_queue.put({
-                'event': 'training_data',
-                'data': {
-                    'epoch': epoch + 1,
-                    'epochs': num_epochs,
-                    'train_loss': float(loss.item()),
-                    'batch_idx': batch_idx,
-                    'batch_time': time.time() - batch_start,
-                    'total_tokens_trained': total_tokens_trained
-                },
-                'room': 'training_room'
-            })
-        
-        # Update batch progress
-        batch_progress.set_postfix({'loss': f'{loss.item():.4f}'})
-
-    avg_train_loss = running_loss / batch_cnt
-    
-    # Validation phase
-    print(colored("\n→ Evaluating...", "yellow"))
-    model.eval()
-    running_loss = 0
-    batch_cnt = 0
-    
-    with torch.no_grad():
-        for input, label in get_batches(X_val, y_val, batch_size):
+        for batch_idx, (input, label) in enumerate(batch_progress):
+            batch_start = time.time()
+            
+            # Time the data preparation
+            start_prep = time.time()
             input, label = input.to(device), label.to(device)
-            loss = loss_fn(model, input, label)
+            prep_time = time.time() - start_prep
+            
+            # Time the forward pass
+            start_forward = time.time()
+            optimizer.zero_grad()
+            logits = model(input)
+            B, T, C = logits.shape
+            logits = logits.view(B * T, C)
+            label = label.view(B * T)
+            loss = F.cross_entropy(logits, label)
+            forward_time = time.time() - start_forward
+            
+            # Time the backward pass
+            start_backward = time.time()
+            loss.backward()
+            backward_time = time.time() - start_backward
+            
+            # Time the parameter update
+            start_update = time.time()
+            optimizer.step()
+            update_time = time.time() - start_update
+            
             running_loss += loss.item()
             batch_cnt += 1
+            total_tokens_trained += B * T
+            batch_time = time.time() - batch_start
+            
+            if batch_idx % 20 == 0 and message_queue is not None:
+                # First send timing stats
+                message_queue.put({
+                    'event': 'timing_stats',
+                    'data': {
+                        'epoch': epoch,
+                        'batch_idx': batch_idx,
+                        'avg_forward': forward_time,
+                        'avg_backward': backward_time,
+                        'avg_update': update_time,
+                        'avg_prep': prep_time,
+                        'avg_comm': 0,  # No communication overhead for single-device training
+                        'device_data': [{
+                            'device_id': 1,
+                            'total_teraflops': (total_params * 2 * batch_size) / (forward_time + backward_time) / 1e12,
+                            'chip': 'CPU' if device.type == 'cpu' else 'GPU'
+                        }],
+                        'total_tokens_trained': total_tokens_trained
+                    },
+                    'room': job_id
+                })
 
-    avg_val_loss = running_loss / batch_cnt
-    epoch_time = time.time() - epoch_start
-    
-    # Emit epoch statistics
-    message_queue.put({
-        'event': 'epoch_stats',
-        'data': {
-            'epoch': epoch + 1,
-            'epochs': num_epochs,
-            'train_loss': float(avg_train_loss),
-            'val_loss': float(avg_val_loss),
-            'epoch_time': epoch_time,
-            'total_tokens_trained': total_tokens_trained
-        },
-        'room': 'training_room'
-    })
-    
-    # Update progress bar with both losses
-    progress_bar.set_postfix({
-        'train_loss': f'{avg_train_loss:.4f}',
-        'val_loss': f'{avg_val_loss:.4f}'
-    })
-    
-    print(colored(f"\n✓ Epoch {epoch+1:2} completed | train_loss = {avg_train_loss:.4f} | val_loss = {avg_val_loss:.4f}", "green"))
-    epoch_start = time.time()
+                # Then send training data
+                message_queue.put({
+                    'event': 'training_data',
+                    'data': {
+                        'epoch': epoch,
+                        'epochs': num_epochs,
+                        'train_loss': float(loss.item()),
+                        'batch_idx': batch_idx,
+                        'batch_time': batch_time,
+                        'total_tokens_trained': total_tokens_trained
+                    },
+                    'room': job_id
+                })
+        
+        # Validation
+        model.eval()
+        val_loss = 0
+        val_cnt = 0
+        
+        with torch.no_grad():
+            for input, label in get_batches(X_val, y_val, batch_size):
+                input, label = input.to(device), label.to(device)
+                logits = model(input)
+                B, T, C = logits.shape
+                logits = logits.view(B * T, C)
+                label = label.view(B * T)
+                val_loss += F.cross_entropy(logits, label).item()
+                val_cnt += 1
+        
+        val_loss /= val_cnt
+        epoch_time = time.time() - epoch_start
+        
+        if message_queue is not None:
+            message_queue.put({
+                'event': 'epoch_stats',
+                'data': {
+                    'epoch': epoch,
+                    'epochs': num_epochs,
+                    'train_loss': float(running_loss / batch_cnt),
+                    'val_loss': float(val_loss),
+                    'epoch_time': epoch_time,
+                    'total_tokens_trained': total_tokens_trained
+                },
+                'room': job_id
+            })
+        
+        epoch_start = time.time()
 
-print(colored("\n✨ Training completed!", "magenta", attrs=['bold']))
-
-### Model Parameters Count
-total_params = sum(p.numel() for p in model.parameters())
-trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-print(colored(f"\n📊 Model Statistics:", "cyan", attrs=['bold']))
-print(f"Total parameters: {total_params:,}")
-print(f"Trainable parameters: {trainable_params:,}")
-
-### Inference
-print("Generating completion...")
-completion = decode(model.generate(1000, device=device).squeeze().tolist())
-print("Generated completion:")
-print(completion)
-print("Saving completion to file...")
-with open('completions.txt', 'w') as f:
-    f.write(completion)
-print("Completion saved to 'completions.txt'")
+if __name__ == "__main__":
+    # When run directly, train without message queue
+    train()

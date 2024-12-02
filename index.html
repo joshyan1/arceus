@@ -2,90 +2,182 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Training Progress</title>
-    <!-- Use Socket.IO client version 3.x compatible with server version -->
-    <script src="https://cdn.socket.io/3.0.0/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Training Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
         }
-        #progress {
-            margin-top: 20px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
-        .entry {
-            margin-bottom: 10px;
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .label {
+            color: #666;
+            font-size: 14px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        #loss-chart, #tokens-chart, #timing-chart {
+            width: 100%;
+            height: 300px;
         }
     </style>
 </head>
 <body>
-    <h1>Training Progress</h1>
+    <div class="container">
+    <h1>Transformer Training Progress</h1>
     <button id="start-training">Start Training</button>
     <div id="progress"></div>
 
     <script>
-        const jobId = '1'; // Replace with your actual job ID if needed
+        const socket = io('http://127.0.0.1:4000');
+
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+            socket.emit('join', { room: 'training_room' });
+        });
+
+        socket.on('timing_stats', (data) => {
+            console.log('Timing stats:', data);
+            const progressDiv = document.getElementById('progress');
+            progressDiv.innerHTML = `
+                <div class="entry">
+                    <h3>Batch ${data.batch_idx} (Epoch ${data.epoch})</h3>
+                    <div class="stats">
+                        <div class="metric">
+                            <strong>Forward Pass:</strong> ${data.avg_forward.toFixed(4)}s
+                        </div>
+                        <div class="metric">
+                            <strong>Backward Pass:</strong> ${data.avg_backward.toFixed(4)}s
+                        </div>
+                        <div class="metric">
+                            <strong>Parameter Update:</strong> ${data.avg_update.toFixed(4)}s
+                        </div>
+                        <div class="metric">
+                            <strong>Data Preparation:</strong> ${data.avg_prep.toFixed(4)}s
+                        </div>
+                        <div class="metric">
+                            <strong>TFLOPS:</strong> ${data.device_data[0].total_teraflops.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="tokens">
+                        Total Tokens Trained: ${data.total_tokens_trained.toLocaleString()}
+                    </div>
+                </div>
+            ` + progressDiv.innerHTML;
+        });
+
+        socket.on('training_data', (data) => {
+            console.log('Training data:', data);
+            const progressDiv = document.getElementById('progress');
+            progressDiv.innerHTML = `
+                <div class="entry">
+                    <h3>Training Progress</h3>
+                    <div class="stats">
+                        <div class="metric">
+                            <strong>Epoch:</strong> ${data.epoch}/${data.epochs}
+                        </div>
+                        <div class="metric">
+                            <strong>Loss:</strong> ${data.train_loss.toFixed(4)}
+                        </div>
+                        <div class="metric">
+                            <strong>Batch:</strong> ${data.batch_idx}
+                        </div>
+                        <div class="metric">
+                            <strong>Batch Time:</strong> ${data.batch_time.toFixed(4)}s
+                        </div>
+                    </div>
+                    <div class="tokens">
+                        Total Tokens Trained: ${data.total_tokens_trained.toLocaleString()}
+                    </div>
+                </div>
+            ` + progressDiv.innerHTML;
+        });
+
+        socket.on('epoch_stats', (data) => {
+            console.log('Epoch stats:', data);
+            const progressDiv = document.getElementById('progress');
+            progressDiv.innerHTML = `
+                <div class="entry">
+                    <h3>Epoch ${data.epoch}/${data.epochs} Complete</h3>
+                    <div class="stats">
+                        <div class="metric">
+                            <strong>Training Loss:</strong> ${data.train_loss.toFixed(4)}
+                        </div>
+                        <div class="metric">
+                            <strong>Validation Loss:</strong> ${data.val_loss.toFixed(4)}
+                        </div>
+                        <div class="metric">
+                            <strong>Epoch Time:</strong> ${data.epoch_time.toFixed(2)}s
+                        </div>
+                    </div>
+                    <div class="tokens">
+                        Total Tokens Trained: ${data.total_tokens_trained.toLocaleString()}
+                    </div>
+                </div>
+            ` + progressDiv.innerHTML;
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from Socket.IO server');
+        });
 
         document.getElementById('start-training').addEventListener('click', () => {
             // Disable the button to prevent multiple clicks
             document.getElementById('start-training').disabled = true;
 
-            // Establish the socket connection
-            const socket = io('http://127.0.0.1:4000');
-
-            socket.on('connect', () => {
-                console.log('Connected to Socket.IO server');
-                // Join the room
-                socket.emit('join', { room: 'training_room' });
-
-                // Send the train request to the server after connecting
-                fetch(`http://127.0.0.1:4000/api/network/train/${jobId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        'epochs': 10,
-                        'learning_rate': 0.1
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message === 'Training started') {
-                        console.log('Training started');
-                    } else {
-                        console.error('Training failed to start:', data.error);
-                        // Re-enable the button if training failed
-                        document.getElementById('start-training').disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error starting training:', error);
-                    // Re-enable the button in case of error
+            // Send the train request to the server
+            fetch('http://127.0.0.1:4000/api/network/train/1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Training started') {
+                    console.log('Training started');
+                } else {
+                    console.error('Training failed to start:', data.error);
+                    // Re-enable the button if training failed
                     document.getElementById('start-training').disabled = false;
-                });
-            });
-
-            socket.on('timing_stats', (data) => {
-                console.log(data);
-                const progressDiv = document.getElementById('progress');
-                progressDiv.innerHTML += `
-                    <div class="entry">
-                        <h3>Batch ${data.batch_idx}</h3>
-                        <p>
-                            <strong>Forward Pass:</strong> ${data.avg_forward.toFixed(4)}s<br>
-                            <strong>Backward Pass:</strong> ${data.avg_backward.toFixed(4)}s<br>
-                            <strong>Parameter Update:</strong> ${data.avg_update.toFixed(4)}s<br>
-                            <strong>Communication Overhead:</strong> ${data.avg_comm.toFixed(4)}s<br>
-                            <strong>Data Preparation:</strong> ${data.avg_prep.toFixed(4)}s<br>
-                        </p>
-                    </div>
-                `;
-            });
-
-            // Handle disconnection
-            socket.on('disconnect', () => {
-                console.log('Disconnected from Socket.IO server');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting training:', error);
+                // Re-enable the button in case of error
+                document.getElementById('start-training').disabled = false;
             });
         });
     </script>
