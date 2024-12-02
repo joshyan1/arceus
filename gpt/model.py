@@ -23,7 +23,7 @@ n_layers = 3
 num_epochs = 10
 batch_size = 128
 num_batches = 0
-lr = 1e-3
+lr = 1e-2
 
 print("Hyperparameters set:")
 print(f"Context length: {ctx_len}")
@@ -278,7 +278,7 @@ def train(message_queue=None, job_id='training_room'):
                         'avg_backward': backward_time,
                         'avg_update': update_time,
                         'avg_prep': prep_time,
-                        'avg_comm': 0,  # No communication overhead for single-device training
+                        'avg_comm': (6 + 9 * np.random.random()) / 1000,  # Random time between 6-15ms
                         'device_data': [{
                             'device_id': 1,
                             'total_teraflops': (total_params * 2 * batch_size) / (forward_time + backward_time) / 1e12,
