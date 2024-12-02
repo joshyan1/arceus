@@ -6,7 +6,7 @@ import numpy as np
 import math
 from termcolor import colored
 from tqdm import tqdm
-
+import os
 print("Importing libraries...")
 
 ### hyper params
@@ -36,7 +36,7 @@ print(f"Learning rate: {lr}")
 
 ### Tokenization
 print("Loading and tokenizing data...")
-with open('./data.txt', 'r', encoding='utf-8') as f:
+with open(os.path.join(os.path.dirname(__file__), 'data.txt'), 'r', encoding='utf-8') as f:
     text = f.read()
 vocab = sorted(list(set(text)))
 vocab_size = len(vocab)
@@ -141,36 +141,25 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x):
         B, T, C = x.shape
         
-        # Projection stage
-        print(colored("→ Projecting Q/K/V", "cyan"), end="\r")
         K = self.k_proj(x)
         Q = self.q_proj(x)
         V = self.v_proj(x)
 
-        # Reshape for attention
-        print(colored("→ Reshaping for attention", "blue"), end="\r")
         K = K.view(B, T, n_heads, head_size // n_heads).transpose(1, 2)
         Q = Q.view(B, T, n_heads, head_size // n_heads).transpose(1, 2)
         V = V.view(B, T, n_heads, head_size // n_heads).transpose(1, 2)
 
-        # Attention calculation
-        print(colored("→ Computing attention scores", "green"), end="\r")
         attn_weights = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(Q.size(-1))
         causal_mask = torch.tril(torch.ones(T, T, device=x.device)).view(1, 1, T, T)
         attn_weights = attn_weights + (1 - causal_mask) * -1e9
         
-        # Softmax and dropout
-        print(colored("→ Applying softmax & dropout", "yellow"), end="\r")
         attn_weights = F.softmax(attn_weights, dim=-1)
         attn_weights = self.attn_dropout(attn_weights)
         
-        # Final computation
-        print(colored("→ Computing final attention output", "magenta"), end="\r")
         o = torch.matmul(attn_weights, V)
         o = o.transpose(1, 2).contiguous().view(B, T, head_size)
         o = self.c_proj(self.resid_dropout(o))
         
-        print(" " * 50, end="\r")  # Clear the status line
         return o
 
 
@@ -200,11 +189,8 @@ class Block(nn.Module):
         print("Block module initialized.")
 
     def forward(self, x):
-        print(colored("▶ Starting attention block", "white", attrs=['bold']), end="\r")
         x = x + self.mha(self.ln_1(x))
-        print(colored("▶ Starting MLP block", "white", attrs=['bold']), end="\r")
         x = x + self.mlp(self.ln_2(x))
-        print(" " * 50, end="\r")  # Clear the status line
         return x
 
 
