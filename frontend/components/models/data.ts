@@ -7,7 +7,14 @@ export function getData(): AIModel[] {
       name: "GPT-2",
       type: "transformer",
       spots: "2/4",
-      projectedEarnings: 0.8,
+      projectedEarnings: 0.3,
+    },
+    {
+      id: "nn-1",
+      name: "MNIST",
+      type: "neuralnetwork",
+      spots: "2/4",
+      projectedEarnings: 0.05,
     },
     {
       id: "nn-3",

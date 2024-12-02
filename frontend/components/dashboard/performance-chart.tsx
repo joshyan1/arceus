@@ -44,11 +44,8 @@ export default function PerformanceChart({
   useEffect(() => {
     setHistory((prev) => {
       const now = new Date();
-      const newHistory = [
-        ...prev,
-        { value: totalCompute, timestamp: now },
-      ].slice(-8); // Keep last 8 points
-      return newHistory;
+      const lastValue = prev.length > 0 ? prev[prev.length - 1].value : 0;
+      return [...prev, { value: lastValue + totalCompute, timestamp: now }];
     });
   }, [totalCompute]);
 

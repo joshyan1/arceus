@@ -136,6 +136,9 @@ export default function Dashboard({ model }: { model: AIModel }) {
           0,
         ) * 2000
       : 0;
+
+  const earnings = (progressPercentage * model.projectedEarnings) / 100;
+
   const deviceData =
     timingData.length > 0 ? timingData[timingData.length - 1].device_data : [];
 
@@ -157,7 +160,7 @@ export default function Dashboard({ model }: { model: AIModel }) {
                 startTime={startTime}
                 progressPercentage={progressPercentage}
               />
-              {/* <Earnings /> */}
+              <Earnings earnings={earnings} startTime={startTime} />
               <Compute totalCompute={totalCompute} />
               <Devices deviceData={deviceData} />
             </div>
