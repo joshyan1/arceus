@@ -35,7 +35,7 @@ export default function Progress({
           {totalEpochs ? progressPercentage.toFixed(2) : "0"}%
         </div>
         <div className="text-lg text-muted-foreground">
-          {totalEpochs ? `${epoch}/${totalEpochs} Epochs` : "0/? Epochs"}
+          {totalEpochs ? `${epoch + 1}/${totalEpochs} Epochs` : "0/? Epochs"}
         </div>
       </div>
       <ProgressBar progress={progressPercentage} total={100} />
