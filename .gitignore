@@ -9,3 +9,5 @@ __pycache__/
 data/
 
 validation/metrics/
+
+gpt/data.txt
