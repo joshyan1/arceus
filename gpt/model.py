@@ -23,7 +23,7 @@ n_layers = 3
 num_epochs = 10
 batch_size = 128
 num_batches = 0
-lr = 1e-2
+lr = 1e-3
 
 print("Hyperparameters set:")
 print(f"Context length: {ctx_len}")
