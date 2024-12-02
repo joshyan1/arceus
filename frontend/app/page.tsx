@@ -136,65 +136,35 @@ export default function Home() {
                     : hoveredModel?.type}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Elit in adipisicing nulla duis eiusmod Lorem eiusmod tempor
-                reprehenderit esse enim eu anim consequat Lorem. Dolor eiusmod
-                veniam commodo culpa aliqua voluptate anim veniam reprehenderit
-                commodo. Id excepteur esse proident sit reprehenderit veniam
-                aliquip adipisicing. Veniam aliqua ex sint ea incididunt minim.
-                Dolor laborum mollit pariatur ipsum consectetur labore officia.
-                Lorem non officia aute eu. Mollit labore pariatur ea dolor.
-                <br />
-                <br />
-                Dolor occaecat tempor enim fugiat. Irure officia dolore elit non
-                occaecat voluptate anim irure proident nostrud nulla ex laborum
-                excepteur cupidatat. Consectetur irure dolore quis Lorem amet
-                aliqua est aute ipsum sit. Nisi non sint occaecat reprehenderit
-                in.
-                <br />
-                <br />
-                Duis ea minim exercitation est adipisicing cupidatat ipsum ut
-                velit anim proident. Minim officia nisi eu do duis non ipsum
-                eiusmod amet ullamco commodo minim. Magna cillum non proident
-                Lorem anim veniam consectetur elit nisi. Enim occaecat non
-                adipisicing occaecat in.
-                <br />
-                <br />
-                Est laboris pariatur nisi ea in Lorem eu consequat irure
-                consequat enim dolor officia. Consequat enim consequat proident
-                dolor ad occaecat. Cillum aute eiusmod Lorem mollit veniam ex
-                sit dolore nostrud in. Eu tempor sint excepteur ex ipsum enim
-                voluptate.
-                <br />
-                <br />
-                Sit minim ullamco labore qui excepteur aliquip veniam. Anim enim
-                ea ipsum mollit consequat sint. Proident nostrud nisi dolore
-                sunt Lorem pariatur pariatur ut adipisicing fugiat occaecat.
-                Ipsum mollit exercitation ad ad.
-                <br />
-                <br />
-                Nulla eu deserunt adipisicing adipisicing quis. Duis irure Lorem
-                pariatur incididunt voluptate aliqua anim cillum eiusmod eiusmod
-                proident id. Laboris minim ex aliquip proident excepteur non
-                velit ex quis aliquip dolor ut.
-                <br />
-                <br />
-                Aliquip proident pariatur pariatur mollit quis aute ad cupidatat
-                voluptate nostrud cillum do labore minim. Aliqua consectetur
-                proident enim. Consectetur adipisicing dolor mollit elit fugiat
-                enim sit excepteur nostrud ea aliqua eiusmod occaecat. Ut
-                eiusmod dolore veniam.
-                <br />
-                <br />
-                Ut mollit qui esse do quis commodo nisi elit quis culpa ut in
-                pariatur. Non quis in fugiat id Lorem quis ad. Commodo quis est
-                ipsum ea velit ad velit exercitation aute dolor quis incididunt
-                irure velit. Esse reprehenderit sit qui. Est in voluptate
-                excepteur dolor anim aliquip sint sint irure ex duis ullamco
-                culpa aute. Sit adipisicing ipsum officia in enim do fugiat
-                exercitation laborum ut esse amet sunt. Id sunt dolor quis magna
-                ex cillum consequat do. Dolor deserunt sunt consequat non
-                officia amet Lorem eu enim ad eu.
+              <div className="flex w-full flex-col gap-1">
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[30%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[36%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[19%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[25%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[22%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[42%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
+                <div className="flex w-full justify-between">
+                  <div className="h-5 w-[32%] animate-pulse rounded-md bg-muted" />
+                  <div className="h-5 w-24 animate-pulse rounded-md bg-muted" />
+                </div>
               </div>
             </div>
           </div>

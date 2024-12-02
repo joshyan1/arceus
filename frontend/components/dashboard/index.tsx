@@ -141,56 +141,56 @@ export default function Dashboard({ model }: { model: AIModel }) {
       <div
         className={cn(
           "relative z-0 flex w-full grow gap-4 overflow-hidden bg-muted/25 p-4",
-          // !isTraining && "items-center justify-center",
+          !isTraining && "items-center justify-center",
         )}
       >
-        {/* {isTraining ? ( */}
-        <>
-          <div className="flex w-96 flex-col gap-4">
-            <Progress
-              epoch={epoch}
-              totalEpochs={totalEpochs}
-              startTime={startTime}
-              progressPercentage={progressPercentage}
-            />
-            {/* <Earnings /> */}
-            <Compute totalCompute={totalCompute} />
-            <Devices deviceData={deviceData} />
-          </div>
-          <div
-            className={cn(
-              "grid grow grid-rows-2 gap-4",
-              model.type === "transformer" ? "grid-cols-3" : "grid-cols-2",
-            )}
-          >
-            <Loss
-              epochStats={epochStats}
-              trainingData={trainingData}
-              className={model.type === "transformer" ? "col-span-2" : ""}
-            />
-            {model.type === "transformer" && <TransformerVisualization />}
-            <Timing
-              timingData={timingData}
-              epoch={epoch}
-              className={model.type === "transformer" ? "col-span-2" : ""}
-            />
-            {model.type === "neuralnetwork" && (
-              <NeuralNetworkVisualization
-                pause={doneTraining}
-                deviceData={deviceData}
+        {isTraining ? (
+          <>
+            <div className="flex w-96 flex-col gap-4">
+              <Progress
+                epoch={epoch}
+                totalEpochs={totalEpochs}
+                startTime={startTime}
+                progressPercentage={progressPercentage}
               />
-            )}
-          </div>
-          {/* {doneTraining && (
+              {/* <Earnings /> */}
+              <Compute totalCompute={totalCompute} />
+              <Devices deviceData={deviceData} />
+            </div>
+            <div
+              className={cn(
+                "grid grow grid-rows-2 gap-4",
+                model.type === "transformer" ? "grid-cols-3" : "grid-cols-2",
+              )}
+            >
+              <Loss
+                epochStats={epochStats}
+                trainingData={trainingData}
+                className={model.type === "transformer" ? "col-span-2" : ""}
+              />
+              {model.type === "transformer" && <TransformerVisualization />}
+              <Timing
+                timingData={timingData}
+                epoch={epoch}
+                className={model.type === "transformer" ? "col-span-2" : ""}
+              />
+              {model.type === "neuralnetwork" && (
+                <NeuralNetworkVisualization
+                  pause={doneTraining}
+                  deviceData={deviceData}
+                />
+              )}
+            </div>
+            {doneTraining && (
               <>
                 <div className="absolute left-0 top-0 h-full w-full bg-black/60" />
                 <DoneTraining model={model} />
               </>
-            )} */}
-        </>
-        {/* ) : (
+            )}
+          </>
+        ) : (
           <WaitingForTraining model={model} startTraining={startTraining} />
-        )} */}
+        )}
       </div>
     </div>
   );

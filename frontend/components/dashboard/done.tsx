@@ -1,18 +1,10 @@
-import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
 import { AIModel } from "../models/columns";
 import getModelImage from "@/lib/model-image";
 import Image from "next/image";
-import {
-  Check,
-  CircleDollarSign,
-  Loader2,
-  MonitorCheck,
-  Receipt,
-  Users,
-} from "lucide-react";
+import { Check, Receipt } from "lucide-react";
 import { Button } from "../ui/button";
-import DrawingGrid from "./DrawingGrid";
+import DrawingGrid from "./drawing-grid";
 
 export default function DoneTraining({ model }: { model: AIModel }) {
   const modelImage = getModelImage(model.type);
@@ -46,7 +38,7 @@ export default function DoneTraining({ model }: { model: AIModel }) {
             {model.type === "neuralnetwork" ? "neural network" : model.type}
           </div>
         </div>
-        <DrawingGrid />
+        {model.type === "neuralnetwork" && <DrawingGrid />}
       </div>
       <div className="flex w-full items-center justify-between border-t p-4">
         <div className="flex gap-4 font-supply uppercase text-muted-foreground">
