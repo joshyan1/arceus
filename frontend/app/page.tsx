@@ -7,7 +7,13 @@ import Image, { StaticImageData } from "next/image";
 import Nav from "@/components/dashboard/nav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CircleDollarSign, Grid2X2Plus, Search, Users } from "lucide-react";
+import {
+  CircleDollarSign,
+  Grid2X2Plus,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
 
 // Table Components
 import { ColumnFiltersState } from "@tanstack/react-table";
@@ -89,6 +95,10 @@ export default function Home() {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
               />
+              <Button size="sm">
+                <Plus className="size-4" />
+                Post Training Job
+              </Button>
             </div>
           </div>
           <DataTable

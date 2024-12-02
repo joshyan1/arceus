@@ -3,7 +3,17 @@ import { Card } from "../ui/card";
 import { AIModel } from "../models/columns";
 import getModelImage from "@/lib/model-image";
 import Image from "next/image";
-import { BrainCircuit, CircleDollarSign, Loader2, Users } from "lucide-react";
+import {
+  BrainCircuit,
+  CircleDollarSign,
+  CircleGauge,
+  Cpu,
+  Layers,
+  Loader2,
+  Monitor,
+  Users,
+  Zap,
+} from "lucide-react";
 import { Button } from "../ui/button";
 
 export default function WaitingForTraining({
@@ -44,12 +54,47 @@ export default function WaitingForTraining({
             {model.type === "neuralnetwork" ? "neural network" : model.type}
           </div>
         </div>
+
+        <div className="flex flex-col gap-2">
+          <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
+            <div>RAJAN AGARWAL</div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Cpu className="size-3.5" />
+              M3
+            </div>
+          </Card>
+          <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
+            <div>SIMERUS MAHESH</div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Cpu className="size-3.5" />
+              M3
+            </div>
+          </Card>
+          <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
+            <div>BOSHUA YAN</div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Cpu className="size-3.5" />
+              M3
+            </div>
+          </Card>
+          <Card className="flex items-center justify-between gap-2 rounded-lg bg-nested-card p-2 font-supply text-sm transition-all">
+            <div>ISHAAN DEY</div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Cpu className="size-3.5" />
+              M1
+            </div>
+          </Card>
+        </div>
       </div>
+
       <div className="flex w-full items-center justify-between border-t p-4">
         <div className="flex gap-4 font-supply uppercase text-muted-foreground">
           <div className="flex items-center gap-2">
             <Users className="size-4 text-primary" />
-            <div className="text-sm">{model.spots} users</div>
+            <div className="text-sm">
+              {parseInt(model.spots.split("/")[0]) + 1}/
+              {model.spots.split("/")[1]} users
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <CircleDollarSign className="size-4 text-primary" />
