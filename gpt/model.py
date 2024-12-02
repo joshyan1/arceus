@@ -271,7 +271,6 @@ def train(message_queue=None, job_id='training_room'):
                 message_queue.put({
                     'event': 'timing_stats',
                     'data': {
-                        'epoch': epoch,
                         'batch_idx': batch_idx,
                         'avg_forward': forward_time,
                         'avg_backward': backward_time,
