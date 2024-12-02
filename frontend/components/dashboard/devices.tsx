@@ -17,7 +17,7 @@ export default function Devices({ deviceData }: { deviceData: Device[] }) {
           <div>DEVICES</div>
           <div className="flex items-center gap-2">
             <Laptop className="size-3.5" />
-            {deviceData.length + 1}
+            {deviceData.length}
           </div>
         </div>
         <div className="flex flex-col gap-2">
@@ -33,6 +33,24 @@ export default function Devices({ deviceData }: { deviceData: Device[] }) {
     </Card>
   );
 }
+
+const demoData = [
+  {
+    device_id: 1,
+    chip: "M1",
+    name: "ISHAAN DEY",
+  },
+  {
+    device_id: 2,
+    chip: "M2 Pro",
+    name: "USER 1",
+  },
+  {
+    device_id: 3,
+    chip: "M3 Max",
+    name: "USER 2",
+  },
+];
 
 function DeviceCard({
   device,
@@ -60,10 +78,12 @@ function DeviceCard({
       onMouseLeave={() => setHoveredDeviceId(null)}
     >
       <div className="flex w-full items-center gap-2">
-        <div>ID {device.device_id}</div>
+        <div>
+          {demoData.find((d) => d.device_id === device.device_id)?.name}
+        </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Cpu className="size-3.5" />
-          {device.chip}
+          {demoData.find((d) => d.device_id === device.device_id)?.chip}
         </div>
       </div>
       <div className="grid grid-cols-2">

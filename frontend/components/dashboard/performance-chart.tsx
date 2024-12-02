@@ -21,6 +21,7 @@ const formatTimestamp = (timestamp: Date) => {
   return timestamp.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
   });
 };
 
@@ -52,30 +53,11 @@ export default function PerformanceChart({
   }, [totalCompute]);
 
   const chartData = (() => {
-    const data = [];
-    const now = new Date();
-
-    // Fill with actual history
-    history.forEach((point, i) => {
-      data.push({
-        hour: `${i + 1}h`,
-        performance: point.value,
-        timestamp: point.timestamp,
-      });
-    });
-
-    // Pad with nulls if needed
-    const remaining = 10 - history.length;
-    for (let i = 0; i < remaining; i++) {
-      const timestamp = new Date(now.getTime() + i * 60 * 60 * 1000);
-      data.push({
-        hour: `${history.length + i + 1}h`,
-        performance: null,
-        timestamp,
-      });
-    }
-
-    return data;
+    return history.map((point, i) => ({
+      hour: `${i + 1}h`,
+      performance: point.value,
+      timestamp: point.timestamp,
+    }));
   })();
 
   return (
@@ -86,7 +68,7 @@ export default function PerformanceChart({
           data={chartData}
           margin={{
             left: 4,
-            right: 4,
+            right: 12,
             top: 12,
           }}
         >
@@ -125,7 +107,7 @@ export default function PerformanceChart({
             stroke="var(--color-performance)"
             isAnimationActive={false}
             dot={(props) => {
-              const isLast = props.index === 7;
+              const isLast = props.index === history.length - 1;
               return isLast ? (
                 <>
                   <circle

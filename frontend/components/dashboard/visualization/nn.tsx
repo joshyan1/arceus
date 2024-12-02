@@ -65,7 +65,7 @@ export default function NeuralNetworkVisualization({
   return (
     <Card
       ref={containerRef}
-      className="relative z-0 row-span-2 flex items-center justify-evenly font-supply"
+      className="relative z-0 col-span-2 flex items-center justify-evenly font-supply"
     >
       {/* <div className="absolute left-0 top-0">
         {pause ? "PAUSED" : "RUNNING"}

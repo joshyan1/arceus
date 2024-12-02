@@ -127,7 +127,7 @@ export default function Dashboard({ model }: { model: AIModel }) {
     100,
   );
 
-  const doneTraining = epoch >= totalEpochs && batch >= batchSize;
+  const doneTraining = epoch + 1 >= totalEpochs && batch >= batchSize;
 
   const totalCompute =
     timingData.length > 0

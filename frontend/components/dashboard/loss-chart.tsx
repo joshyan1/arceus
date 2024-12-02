@@ -74,7 +74,7 @@ export default function LossChart({
           data={chartData}
           margin={{
             left: 4,
-            right: 4,
+            right: 12,
             top: 12,
             bottom: 4,
           }}
