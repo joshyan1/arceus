@@ -168,10 +168,10 @@ def start_training(job_id):
 
     job_config = active_jobs[job_id]
 
-    if not job_config['coordinator']:
+    if not job_config['coordinator'] and job_config['model_config'].get('type') != 'transformer':
         return jsonify({'error': 'Network not initialized'}), 400
 
-    if job_config['status'] != 'initialized':
+    if job_config['status'] != 'initialized' and job_config['model_config'].get('type') != 'transformer':
         return jsonify({'error': 'Network must be initialized before training'}), 400
 
     data = request.get_json() or {}
@@ -182,6 +182,26 @@ def start_training(job_id):
         # Start training in a separate thread
         def train_thread():
             dataset_config = job_config['dataset_config']
+            model_config = job_config['model_config']
+
+            if model_config.get('type') == 'transformer':
+                # Import and run the transformer model training
+                import runpy
+                import os
+                
+                # Get the source file path
+                source_file = dataset_config.get('source')
+                if not source_file or not os.path.exists(source_file):
+                    raise ValueError(f"Source file {source_file} not found")
+                
+                # Set the data file for the model
+                os.environ['TRAINING_DATA_PATH'] = source_file
+                
+                # Run the GPT model training script
+                runpy.run_path('gpt/model.py', run_name='__main__')
+                
+                job_config['status'] = 'completed'
+                return
 
             # Initialize dataset based on configuration
             transform = transforms.Compose([

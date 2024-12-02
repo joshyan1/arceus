@@ -15,6 +15,10 @@ To run Arceus across multiple machines on your local network, first initialize t
 python -m api.server
 ```
 
+## Training Options
+
+### 1. Distributed Neural Network Training
+
 First create register training job through the API, outlining the model and dataset configurations
 
 ```shell
@@ -55,7 +59,35 @@ curl -X POST http://<flask-server-ip>/api/network/train/<job-id> \
      -d '{"epochs": 10, "learning_rate": 0.1}'
 ```
 
-You will see a message on your server
+### 2. Transformer Model Training
+
+To train a transformer model (GPT), first register a training job with the transformer configuration:
+
+```shell
+curl -X POST http://localhost:4000/api/jobs \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model_config": {
+         "type": "transformer"
+       },
+       "dataset_config": {
+         "source": "gpt/data.txt"
+       }
+     }'
+```
+
+Then start training directly (no device registration or initialization needed):
+```shell
+curl -X POST http://<flask-server-ip>/api/network/train/<job-id> \
+     -H "Content-Type: application/json" \
+     -d '{}'
+```
+
+The transformer model will use the hyperparameters defined in `gpt/model.py` and train on the data from the specified source file.
+
+## Common Messages
+
+You will see a message on your server when training starts:
 ```
 127.0.0.1 - - [26/Nov/2024 10:40:56] "POST /api/network/train HTTP/1.1" 200 -
 
